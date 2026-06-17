@@ -1,0 +1,67 @@
+sequenceDiagram
+    participant Dev as 💻 Developer
+    participant Script as 📜 deploy-demo.sh
+    participant Podman as 🐳 Podman
+    participant Systemd as ⚙️ systemd
+    participant FreeIPA as 🔐 FreeIPA DNS
+    participant Traefik as 🌐 Traefik
+
+    Dev->>Script: ./scripts/deploy-demo-ubi.sh
+    activate Script
+
+    Script->>Podman: Create secret (demo-postgres-password)
+    Podman-->>Script: ✅ Secret created
+
+    Script->>Script: Copy quadlets to /etc/containers/systemd/
+    Script->>Systemd: systemctl daemon-reload
+    Systemd-->>Script: ✅ Quadlets loaded
+
+    Script->>Podman: Create demo-net network
+    Podman-->>Script: ✅ Network created
+
+    Script->>Systemd: systemctl start demo-db-ubi.service
+    activate Systemd
+    Systemd->>Podman: Pull ghcr.io/jkirklan/demo-db-ubi:latest
+    Podman-->>Systemd: ✅ Image pulled
+    Systemd->>Podman: Create container (demo-db-ubi)
+    Podman-->>Systemd: ✅ Container created
+
+    Note over Podman: PostgreSQL initializes<br/>Creates schema<br/>(~15 seconds)
+
+    Podman->>Podman: Health check (pg_isready)
+    Podman-->>Systemd: ✅ Healthy
+    deactivate Systemd
+
+    Script->>Systemd: systemctl start demo-webapp-ubi.service
+    activate Systemd
+    Systemd->>Podman: Pull ghcr.io/jkirklan/demo-webapp-ubi:latest
+    Podman-->>Systemd: ✅ Image pulled
+    Systemd->>Podman: Create container (demo-webapp-ubi)
+    Podman-->>Systemd: ✅ Container created
+
+    Note over Podman: Node.js starts<br/>Connects to database<br/>(~5 seconds)
+
+    Podman->>Podman: Health check (curl /health)
+    Podman-->>Systemd: ✅ Healthy
+    deactivate Systemd
+
+    Script-->>Dev: ✅ Demo deployed at localhost:3000
+
+    Note over Dev,Traefik: Optional: Add DNS and Traefik routing
+
+    Dev->>FreeIPA: ipa dnsrecord-add demo-ubi --a-rec=192.168.1.150
+    FreeIPA-->>Dev: ✅ DNS record added
+
+    Dev->>Traefik: Deploy demo-routes.yml
+    Traefik->>FreeIPA: DNS lookup (demo-ubi.lab.kubelet.org)
+    FreeIPA-->>Traefik: 192.168.1.150
+
+    Traefik->>Podman: Proxy to localhost:3000
+    Podman-->>Traefik: ✅ Response
+
+    deactivate Script
+
+    Dev->>Traefik: HTTPS://demo-ubi.lab.kubelet.org
+    Traefik->>Podman: HTTP://192.168.1.151:3000
+    Podman-->>Traefik: JSON response
+    Traefik-->>Dev: HTTPS response

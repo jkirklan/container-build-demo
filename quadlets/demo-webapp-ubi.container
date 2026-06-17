@@ -1,0 +1,40 @@
+[Unit]
+Description=Demo Task Tracker Web App (UBI)
+After=demo-network-network.service demo-db-ubi.service
+Requires=demo-network-network.service
+Wants=demo-db-ubi.service
+
+[Container]
+ContainerName=demo-webapp-ubi
+Image=ghcr.io/jkirklan/demo-webapp-ubi:latest
+Network=demo-net
+PublishPort=3000:3000
+
+# Database connection
+Environment=POSTGRES_HOST=demo-db-ubi
+Environment=POSTGRES_PORT=5432
+Environment=POSTGRES_DB=taskdb
+Environment=POSTGRES_USER=taskuser
+Environment=TZ=America/New_York
+Secret=demo-postgres-password,type=env,target=POSTGRES_PASSWORD
+
+# Health check
+HealthCmd=curl -f http://localhost:3000/health || exit 1
+HealthInterval=30s
+HealthTimeout=10s
+HealthRetries=3
+HealthStartPeriod=15s
+
+# Auto-update and labels
+Label=io.containers.autoupdate=registry
+Label=app=demo
+Label=variant=ubi
+Label=component=webapp
+AutoUpdate=registry
+
+[Service]
+Restart=always
+TimeoutStartSec=60
+
+[Install]
+WantedBy=default.target

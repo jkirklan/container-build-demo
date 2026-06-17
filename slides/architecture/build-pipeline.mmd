@@ -1,0 +1,35 @@
+flowchart TD
+    Start(["💻 Developer<br/>Commits Code"]) --> PreCommit["🔒 Pre-commit Hooks<br/>gitleaks secret scan<br/><br/>Blocks commit if secrets found"]
+
+    PreCommit --> Trigger{{"🔀 Build<br/>Trigger"}}
+
+    Trigger -->|"UBI Path"| BuildUBI["🔨 Build UBI Image<br/>Multi-stage Containerfile<br/><br/>• npm audit (FAIL on HIGH/CRITICAL)<br/>• Multi-arch (AMD64+ARM64)<br/>• Base: ubi9/nodejs-20"]
+    Trigger -->|"RHHI Path"| BuildRHHI["🔨 Build RHHI Image<br/>Multi-stage Containerfile<br/><br/>• npm audit (FAIL on HIGH/CRITICAL)<br/>• Multi-arch (AMD64+ARM64)<br/>• Base: hi/nodejs:20-builder"]
+
+    BuildUBI --> SecretUBI["🔐 Trivy Secret Scan<br/>FAIL on HIGH/CRITICAL<br/><br/>Detects hardcoded credentials"]
+    BuildRHHI --> SecretRHHI["🔐 Trivy Secret Scan<br/>FAIL on HIGH/CRITICAL<br/><br/>Detects hardcoded credentials"]
+
+    SecretUBI --> ScanUBI["🛡️ Trivy CVE Scan<br/>Report HIGH/CRITICAL<br/><br/>UBI: 7 CVEs (RHEL 9.7)"]
+    SecretRHHI --> ScanRHHI["🛡️ Trivy CVE Scan<br/>Report HIGH/CRITICAL<br/><br/>RHHI: Minimal (distroless) ⭐"]
+
+    ScanUBI --> SBOMU["📋 Generate SBOM<br/>CycloneDX JSON<br/><br/>Supply chain transparency"]
+    ScanRHHI --> SBOMR["📋 Generate SBOM<br/>CycloneDX JSON<br/><br/>Supply chain transparency"]
+
+    SBOMU --> PushUBI["⬆️ Push to Registry<br/>ghcr.io/jkirklan/<br/>demo-*-ubi:latest"]
+    SBOMR --> PushRHHI["⬆️ Push to Registry<br/>ghcr.io/jkirklan/<br/>demo-*-rhhi:latest"]
+
+    PushUBI --> Deploy["🚀 Deploy via Quadlet<br/>Podman + systemd"]
+    PushRHHI --> Deploy
+
+    Deploy --> Verify["✅ Verify<br/>Health checks<br/>Smoke tests"]
+
+    classDef startEnd fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    classDef ubi fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    classDef rhhi fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px
+    classDef security fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef deploy fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+
+    class Start,PreCommit,Trigger,Verify startEnd
+    class BuildUBI,SecretUBI,ScanUBI,SBOMU,PushUBI ubi
+    class BuildRHHI,SecretRHHI,ScanRHHI,SBOMR,PushRHHI rhhi
+    class Deploy deploy

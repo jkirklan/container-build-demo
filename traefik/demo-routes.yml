@@ -1,0 +1,37 @@
+# Traefik Dynamic Configuration for Demo Environment
+# Deploy to services.lab.kubelet.org:/etc/traefik/config/demo-routes.yml
+
+http:
+  routers:
+    # UBI Demo
+    demo-ubi:
+      rule: "Host(`demo-ubi.lab.kubelet.org`)"
+      service: demo-ubi
+      entryPoints:
+        - websecure
+      tls: {}
+      middlewares:
+        - security-headers
+
+    # RHHI Demo
+    demo-rhhi:
+      rule: "Host(`demo-rhhi.lab.kubelet.org`)"
+      service: demo-rhhi
+      entryPoints:
+        - websecure
+      tls: {}
+      middlewares:
+        - security-headers
+
+  services:
+    # UBI Demo (kvm151:3000)
+    demo-ubi:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.1.151:3000"
+
+    # RHHI Demo (kvm151:3001)
+    demo-rhhi:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.1.151:3001"

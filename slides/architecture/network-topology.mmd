@@ -1,0 +1,57 @@
+graph TB
+    subgraph Internet["🌍 Internet"]
+        Browser["Web Browser"]
+    end
+
+    subgraph Homelab["🏠 Homelab Network<br/>192.168.1.0/24"]
+        subgraph ServicesVM["services.lab.kubelet.org<br/>192.168.1.150"]
+            Traefik["Traefik<br/>:443 websecure<br/>:80 web (redirect)"]
+            FreeIPA["FreeIPA<br/>:53 DNS<br/>:389 LDAP<br/>:88 Kerberos"]
+        end
+
+        subgraph KVM151["kvm151.lab.kubelet.org<br/>192.168.1.151"]
+            subgraph DemoNet["Podman Network: demo-net<br/>172.16.0.0/16 (internal)"]
+                WebUBI["demo-webapp-ubi<br/>172.16.0.10<br/>Published: 3000→3000"]
+                DBUBI["demo-db-ubi<br/>172.16.0.11<br/>Published: 5432→5432"]
+                WebRHHI["demo-webapp-rhhi<br/>172.16.0.12<br/>Published: 3001→3000"]
+                DBRHHI["demo-db-rhhi<br/>172.16.0.13<br/>Published: 5433→5432"]
+            end
+        end
+    end
+
+    Browser -->|"1. DNS Query<br/>demo-ubi.lab.kubelet.org"| FreeIPA
+    FreeIPA -->|"2. DNS Response<br/>192.168.1.150"| Browser
+
+    Browser -->|"3. HTTPS Request<br/>Host: demo-ubi.lab.kubelet.org"| Traefik
+
+    Traefik -->|"4. HTTP Proxy<br/>192.168.1.151:3000"| WebUBI
+    Traefik -->|"4. HTTP Proxy<br/>192.168.1.151:3001"| WebRHHI
+
+    WebUBI -->|"5. SQL Query<br/>demo-db-ubi:5432<br/>(DNS via Podman)"| DBUBI
+    WebRHHI -->|"5. SQL Query<br/>demo-db-rhhi:5432<br/>(DNS via Podman)"| DBRHHI
+
+    DBUBI -->|"6. SQL Response"| WebUBI
+    DBRHHI -->|"6. SQL Response"| WebRHHI
+
+    WebUBI -->|"7. HTTP Response"| Traefik
+    WebRHHI -->|"7. HTTP Response"| Traefik
+
+    Traefik -->|"8. HTTPS Response<br/>+ TLS Termination"| Browser
+
+    classDef external fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    classDef infra fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef container fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    classDef network fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px,stroke-dasharray: 5 5
+
+    class Browser external
+    class Traefik,FreeIPA infra
+    class WebUBI,DBUBI,WebRHHI,DBRHHI container
+    class DemoNet network
+
+    linkStyle 0,1 stroke:#2196f3,stroke-width:2px
+    linkStyle 2 stroke:#4caf50,stroke-width:3px
+    linkStyle 3,4 stroke:#ff9800,stroke-width:2px
+    linkStyle 5,6 stroke:#9c27b0,stroke-width:2px
+    linkStyle 7,8 stroke:#f44336,stroke-width:2px
+    linkStyle 9,10 stroke:#ff9800,stroke-width:2px
+    linkStyle 11 stroke:#4caf50,stroke-width:3px

@@ -1,0 +1,39 @@
+[Unit]
+Description=Demo PostgreSQL Database (RHHI)
+After=demo-network-network.service
+Requires=demo-network-network.service
+
+[Container]
+ContainerName=demo-db-rhhi
+Image=ghcr.io/jkirklan/demo-db-rhhi:latest
+Network=demo-net
+PublishPort=5433:5432
+
+# Database configuration
+Environment=POSTGRES_DB=taskdb
+Environment=POSTGRES_USER=taskuser
+Secret=demo-postgres-password,type=env,target=POSTGRES_PASSWORD
+
+# Data persistence
+Volume=/home/jkirklan/demo-data/rhhi/postgres:/var/lib/pgsql/data:Z
+
+# Health check
+HealthCmd=pg_isready -U taskuser -d taskdb || exit 1
+HealthInterval=30s
+HealthTimeout=10s
+HealthRetries=3
+HealthStartPeriod=60s
+
+# Auto-update and labels
+Label=io.containers.autoupdate=registry
+Label=app=demo
+Label=variant=rhhi
+Label=component=database
+AutoUpdate=registry
+
+[Service]
+Restart=always
+TimeoutStartSec=120
+
+[Install]
+WantedBy=default.target

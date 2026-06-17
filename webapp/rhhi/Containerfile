@@ -1,0 +1,60 @@
+# Demo Task Tracker - RHHI (Hummingbird) Build
+# Multi-stage container build using Red Hat Hummingbird Images
+# Ultra-minimal distroless runtime for maximum security
+
+# ============================================================================
+# Stage 1: Builder (Fedora-based with build tools)
+# ============================================================================
+FROM registry.access.redhat.com/hi/nodejs:20-builder AS builder
+
+# Run as root for build operations (Hummingbird images also default to non-root)
+USER 0
+
+WORKDIR /build/webapp
+
+# Copy package files first (layer caching)
+COPY package*.json ./
+
+# SECURITY: npm audit before install (same standard as UBI)
+# Fails build if HIGH or CRITICAL vulnerabilities found
+RUN npm audit --production --audit-level=high || \
+    (echo "ERROR: HIGH or CRITICAL vulnerabilities found" && exit 1)
+
+# Install dependencies (npm ci uses package-lock.json)
+RUN npm ci
+
+# Copy application source
+COPY src/ ./src/
+
+# ============================================================================
+# Stage 2: Runtime (Distroless - NO package manager)
+# ============================================================================
+FROM registry.access.redhat.com/hi/nodejs:20
+
+# CRITICAL: No microdnf/dnf in distroless images!
+# Everything must come from builder or be built-in
+
+WORKDIR /app
+
+# Copy from builder (note: default user is already non-root UID 65532)
+COPY --from=builder --chown=65532:65532 /build/webapp/node_modules ./node_modules
+COPY --from=builder --chown=65532:65532 /build/webapp/package*.json ./
+COPY --chown=65532:65532 src/ ./src/
+
+# Health check (wget is included in distroless, curl is not)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+  CMD wget --spider -q http://localhost:3000/health || exit 1
+
+# OCI metadata labels
+LABEL org.opencontainers.image.title="Demo Task Tracker (RHHI)"
+LABEL org.opencontainers.image.description="Simple Node.js task tracker on Hummingbird distroless"
+LABEL org.opencontainers.image.base.name="registry.access.redhat.com/hi/nodejs:20"
+LABEL org.opencontainers.image.version="1.0.0"
+LABEL org.opencontainers.image.vendor="Homelab Demo"
+
+# User is already set to 65532 in base image (no need to switch)
+# USER directive not needed
+
+EXPOSE 3000
+
+CMD ["node", "src/app.js"]

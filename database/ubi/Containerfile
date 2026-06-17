@@ -1,0 +1,25 @@
+# Demo PostgreSQL Database - UBI Build
+# Uses Red Hat's official PostgreSQL 15 container (RHEL-based, already configured)
+# Note: PostgreSQL not available in free UBI repos - using official Red Hat image
+
+FROM registry.redhat.io/rhel9/postgresql-15:latest
+
+# OCI metadata labels
+LABEL org.opencontainers.image.title="Demo PostgreSQL (Red Hat Official)"
+LABEL org.opencontainers.image.description="PostgreSQL 15 from Red Hat official image"
+LABEL org.opencontainers.image.base.name="registry.redhat.io/rhel9/postgresql-15"
+LABEL org.opencontainers.image.version="15"
+LABEL org.opencontainers.image.vendor="Homelab Demo"
+
+# Copy initialization script to standard location
+# Red Hat PostgreSQL image runs scripts from /usr/share/container-scripts/postgresql/start/
+USER 0
+COPY init.sql /usr/share/container-scripts/postgresql/start/init.sql
+RUN chown 26:26 /usr/share/container-scripts/postgresql/start/init.sql
+
+# Switch back to postgres user (UID 26 in Red Hat images)
+USER 26
+
+EXPOSE 5432
+
+# Use the official image's entrypoint (handles initialization automatically)

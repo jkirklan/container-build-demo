@@ -1,0 +1,72 @@
+# Secrets and Credentials
+*.key
+*.pem
+*.p12
+*.pfx
+*.jks
+*.keystore
+.env
+.env.*
+*secret*
+*password*
+*credentials*
+secrets/
+certs/*.key
+certs/*.pem
+
+# Exception: Certificate Signing Requests are safe to commit
+!*.csr
+
+# Session and temporary files
+.remember/
+*.tmp
+*.log
+*.bak
+
+# OS-specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Ansible
+*.retry
+.vault_pass
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+
+# Build artifacts
+dist/
+build/
+*.egg-info/

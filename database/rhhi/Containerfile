@@ -1,0 +1,24 @@
+# Demo PostgreSQL Database - RHHI (Hummingbird) Build
+# PostgreSQL 17 on Hummingbird distroless (0 CVEs)
+# Note: Using official Hummingbird PostgreSQL image (already configured)
+
+FROM registry.access.redhat.com/hi/postgresql:17
+
+# OCI metadata labels
+LABEL org.opencontainers.image.title="Demo PostgreSQL (RHHI)"
+LABEL org.opencontainers.image.description="PostgreSQL 17 on Hummingbird distroless (0 CVEs)"
+LABEL org.opencontainers.image.base.name="registry.access.redhat.com/hi/postgresql:17"
+LABEL org.opencontainers.image.version="17"
+LABEL org.opencontainers.image.vendor="Homelab Demo"
+
+# Copy initialization script to standard location
+# Hummingbird PostgreSQL image handles initialization automatically
+USER 0
+COPY init.sql /usr/share/container-scripts/postgresql/start/init.sql
+
+# Switch back to postgres user (matches Red Hat convention)
+USER 26
+
+EXPOSE 5432
+
+# Use the official image's entrypoint (handles initialization automatically)

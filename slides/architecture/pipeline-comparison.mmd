@@ -1,0 +1,60 @@
+flowchart TD
+    subgraph Local["🖥️ LOCAL PIPELINE"]
+        direction TB
+
+        DevLocal["💻 Developer Workstation"]
+
+        PreCommitLocal["🔒 Pre-commit Hooks<br/>gitleaks"]
+
+        BuildLocal["🔨 Build Script<br/>./build-demo-ubi.sh<br/><br/>Multi-stage Containerfile<br/>npm audit (FAIL on HIGH/CRITICAL)<br/>Multi-arch (AMD64+ARM64)"]
+
+        ScanLocal["🔍 Scan Script<br/>./scan-demo.sh<br/><br/>Trivy secret scan (FAIL)<br/>Trivy CVE scan (report)<br/>SBOM generation"]
+
+        DeployLocal["🚀 Deploy Script<br/>./deploy-demo-ubi.sh<br/><br/>Podman quadlets<br/>systemd services<br/>Local testing"]
+
+        DevLocal --> PreCommitLocal
+        PreCommitLocal --> BuildLocal
+        BuildLocal --> ScanLocal
+        ScanLocal --> DeployLocal
+    end
+
+    subgraph CICD["☁️ CI/CD PIPELINE"]
+        direction TB
+
+        Push["📤 Git Push to main"]
+
+        Trigger["⚡ Auto-trigger<br/>on demo/** changes"]
+
+        BuildCI["🔨 GitHub Actions Build<br/>Docker Buildx<br/><br/>Multi-stage Containerfile<br/>npm audit (FAIL on HIGH/CRITICAL)<br/>Multi-platform matrix"]
+
+        SecretCI["🔐 Trivy Secret Scan<br/>exit-code: 1<br/><br/>FAIL on HIGH/CRITICAL<br/>SARIF upload to Security tab"]
+
+        CVECI["🛡️ Trivy CVE Scan<br/>exit-code: 0<br/><br/>Report to Security tab<br/>SARIF upload"]
+
+        SBOMCI["📋 SBOM Generation<br/>Trivy Action<br/><br/>CycloneDX format<br/>Artifact upload<br/>90-day retention"]
+
+        PushCI["⬆️ Push to Registry<br/>ghcr.io<br/><br/>Multi-arch manifest<br/>Auto-tagged"]
+
+        SecurityTab["🔒 GitHub Security Tab<br/>Vulnerability dashboard"]
+
+        Push --> Trigger
+        Trigger --> BuildCI
+        BuildCI --> SecretCI
+        SecretCI -->|PASS| CVECI
+        SecretCI -.->|FAIL| FailBuild["❌ Build Failed<br/>No registry push"]
+        CVECI --> SBOMCI
+        SBOMCI --> PushCI
+        CVECI --> SecurityTab
+    end
+
+    Local -.->|"Manual workflow"| CICD
+
+    classDef local fill:#e8f5e9,stroke:#2e7d32,stroke-width:3px
+    classDef cicd fill:#e3f2fd,stroke:#1565c0,stroke-width:3px
+    classDef security fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef fail fill:#ffebee,stroke:#c62828,stroke-width:2px
+
+    class DevLocal,PreCommitLocal,BuildLocal,ScanLocal,DeployLocal local
+    class Push,Trigger,BuildCI,PushCI cicd
+    class SecretCI,CVECI,SBOMCI,SecurityTab security
+    class FailBuild fail

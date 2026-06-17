@@ -1,0 +1,40 @@
+[Unit]
+Description=Demo Task Tracker Web App (RHHI)
+After=demo-network-network.service demo-db-rhhi.service
+Requires=demo-network-network.service
+Wants=demo-db-rhhi.service
+
+[Container]
+ContainerName=demo-webapp-rhhi
+Image=ghcr.io/jkirklan/demo-webapp-rhhi:latest
+Network=demo-net
+PublishPort=3001:3000
+
+# Database connection
+Environment=POSTGRES_HOST=demo-db-rhhi
+Environment=POSTGRES_PORT=5432
+Environment=POSTGRES_DB=taskdb
+Environment=POSTGRES_USER=taskuser
+Environment=TZ=America/New_York
+Secret=demo-postgres-password,type=env,target=POSTGRES_PASSWORD
+
+# Health check (wget not curl for distroless)
+HealthCmd=wget --spider -q http://localhost:3000/health || exit 1
+HealthInterval=30s
+HealthTimeout=10s
+HealthRetries=3
+HealthStartPeriod=15s
+
+# Auto-update and labels
+Label=io.containers.autoupdate=registry
+Label=app=demo
+Label=variant=rhhi
+Label=component=webapp
+AutoUpdate=registry
+
+[Service]
+Restart=always
+TimeoutStartSec=60
+
+[Install]
+WantedBy=default.target

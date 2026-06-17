@@ -1,0 +1,46 @@
+graph TB
+    subgraph External["External Access"]
+        User[("👤 User<br/>Browser")]
+    end
+
+    subgraph Services["services.lab.kubelet.org<br/>(192.168.1.150)"]
+        Traefik["🌐 Traefik<br/>Reverse Proxy<br/>:443 HTTPS"]
+        FreeIPA["🔐 FreeIPA<br/>DNS/CA<br/>:53 DNS"]
+    end
+
+    subgraph KVM151["kvm151.lab.kubelet.org<br/>(192.168.1.151)"]
+        subgraph UBI["UBI Stack<br/>(RHEL-based)"]
+            WebUBI["📱 Task Tracker<br/>Node.js 20<br/>:3000<br/><br/>Size: 245 MB<br/>CVEs: 7"]
+            DBUBI["🗄️ PostgreSQL 15<br/>:5432<br/><br/>Size: 401 MB<br/>CVEs: Minimal"]
+        end
+
+        subgraph RHHI["RHHI Stack<br/>(Hummingbird)"]
+            WebRHHI["📱 Task Tracker<br/>Node.js 20<br/>:3001<br/><br/>Size: 128 MB ⭐<br/>CVEs: Minimal"]
+            DBRHHI["🗄️ PostgreSQL 17<br/>:5433<br/><br/>Size: 144 MB ⭐<br/>CVEs: Minimal ⭐"]
+        end
+
+        Network["demo-net<br/>Podman Network"]
+    end
+
+    User -->|"HTTPS<br/>demo-ubi.lab.kubelet.org"| Traefik
+    User -->|"HTTPS<br/>demo-rhhi.lab.kubelet.org"| Traefik
+    Traefik -->|"HTTP :3000"| WebUBI
+    Traefik -->|"HTTP :3001"| WebRHHI
+    WebUBI -->|"PostgreSQL<br/>:5432"| DBUBI
+    WebRHHI -->|"PostgreSQL<br/>:5433"| DBRHHI
+    Traefik -.-|"DNS Lookup"| FreeIPA
+
+    Network -.->|"Isolates"| UBI
+    Network -.->|"Isolates"| RHHI
+
+    classDef external fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    classDef infra fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef ubi fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    classDef rhhi fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px
+    classDef network fill:#fafafa,stroke:#757575,stroke-width:1px,stroke-dasharray: 5 5
+
+    class User external
+    class Traefik,FreeIPA infra
+    class WebUBI,DBUBI ubi
+    class WebRHHI,DBRHHI rhhi
+    class Network network

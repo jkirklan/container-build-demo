@@ -1,0 +1,367 @@
+/**
+ * Red Hat Brand-Compliant reveal.js Theme
+ *
+ * Based on Red Hat brand standards:
+ * https://www.redhat.com/en/about/brand/standards
+ *
+ * Colors: Red Hat red (#ee0000), black, white
+ * Typography: Red Hat Display (headings), Red Hat Text (body), Red Hat Mono (code)
+ * Principles: Generous white space, sentence case, high contrast
+ */
+
+/* Import Red Hat fonts from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;700;900&family=Red+Hat+Text:wght@400;500;700&family=Red+Hat+Mono:wght@400;500&display=swap');
+
+/* Red Hat Brand Colors */
+:root {
+  --redhat-red: #ee0000;
+  --redhat-black: #000000;
+  --redhat-white: #ffffff;
+  --redhat-gray-10: #f2f2f2;
+  --redhat-gray-95: #151515;
+  --redhat-red-05: #fef0f0;
+  --redhat-red-20: #fbc5c5;
+  --redhat-red-60: #a60000;
+  --redhat-orange: #f5921b;
+  --redhat-teal: #37a3a3;
+}
+
+/* Base reveal.js overrides */
+.reveal {
+  font-family: 'Red Hat Text', sans-serif;
+  font-size: 32px;
+  font-weight: 400;
+  color: var(--redhat-black);
+  background-color: var(--redhat-white);
+}
+
+/* Headings - Red Hat Display, sentence case, bold */
+.reveal h1,
+.reveal h2,
+.reveal h3,
+.reveal h4,
+.reveal h5,
+.reveal h6 {
+  font-family: 'Red Hat Display', sans-serif;
+  font-weight: 700;
+  text-transform: none; /* Sentence case only - NEVER title case or caps */
+  line-height: 1.1;
+  letter-spacing: normal; /* Never adjust tracking */
+  color: var(--redhat-red);
+  margin-bottom: 0.3em; /* Reduced from 0.5em */
+  margin-top: 0; /* Remove top margin */
+}
+
+.reveal h1 {
+  font-size: 2.8em; /* Reduced from 3em */
+  font-weight: 900;
+  margin-bottom: 0.2em; /* Reduced from 0.3em */
+}
+
+.reveal h2 {
+  font-size: 1.9em; /* Reduced from 2.2em */
+  margin-top: 0; /* Removed top margin */
+  margin-bottom: 0.3em; /* Reduced from 0.4em */
+}
+
+.reveal h3 {
+  font-size: 1.6em;
+  color: var(--redhat-black);
+}
+
+.reveal h4 {
+  font-size: 1.3em;
+  color: var(--redhat-black);
+}
+
+/* Paragraph text - Red Hat Text */
+.reveal p {
+  font-family: 'Red Hat Text', sans-serif;
+  line-height: 1.4; /* Reduced from 1.5 */
+  margin: 0 0 0.6em 0; /* Reduced from 1em */
+  text-align: left;
+  color: var(--redhat-black);
+}
+
+/* Lists - flush left, adequate spacing */
+.reveal ul,
+.reveal ol {
+  text-align: left;
+  line-height: 1.4; /* Reduced from 1.5 for more compact spacing */
+  margin: 0 0 0.8em 0; /* Reduced bottom margin */
+  padding-left: 1.5em;
+}
+
+.reveal li {
+  margin-bottom: 0.4em; /* Reduced from 0.5em */
+}
+
+/* Strong/bold - use for emphasis (Red Hat brand style) */
+.reveal strong,
+.reveal b {
+  color: var(--redhat-red);
+  font-weight: 700;
+  font-size: 0.95em; /* Slightly smaller to save space */
+}
+
+/* Emphasis (italic) */
+.reveal em,
+.reveal i {
+  font-style: italic;
+  color: var(--redhat-black);
+}
+
+/* Links - Red Hat red with underline */
+.reveal a {
+  color: var(--redhat-red);
+  text-decoration: underline;
+  transition: color 0.15s ease;
+}
+
+.reveal a:hover {
+  color: var(--redhat-red-60);
+  text-decoration: underline;
+}
+
+/* Code - Red Hat Mono */
+.reveal code {
+  font-family: 'Red Hat Mono', monospace;
+  font-size: 0.85em;
+  padding: 0.1em 0.3em;
+  background-color: var(--redhat-gray-10);
+  border-radius: 3px;
+  color: var(--redhat-black);
+}
+
+.reveal pre {
+  font-size: 0.5em; /* Reduced from 0.6em */
+  line-height: 1.2; /* Reduced from 1.3 */
+  margin: 0.5em 0; /* Reduced from 1em */
+  width: 100%;
+  box-shadow: none;
+}
+
+.reveal pre code {
+  font-family: 'Red Hat Mono', monospace;
+  padding: 0.8em; /* Reduced from 1em */
+  background-color: var(--redhat-gray-95);
+  color: var(--redhat-white);
+  border-radius: 5px;
+  max-height: 50vh; /* Changed from 600px to viewport-relative */
+  overflow: auto;
+  display: block;
+}
+
+/* Tables */
+.reveal table {
+  font-size: 0.7em; /* Reduced from 0.75em for more compact tables */
+  line-height: 1.2; /* Reduced from 1.3 */
+  margin: 0.8em auto; /* Reduced from 1em */
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+.reveal table th {
+  font-family: 'Red Hat Display', sans-serif;
+  font-weight: 700;
+  background-color: var(--redhat-red);
+  color: var(--redhat-white);
+  padding: 0.5em 0.75em;
+  text-align: left;
+  border: none;
+}
+
+.reveal table td {
+  padding: 0.5em 0.75em;
+  border-bottom: 1px solid var(--redhat-gray-10);
+  text-align: left;
+}
+
+.reveal table tr:hover {
+  background-color: var(--redhat-red-05);
+}
+
+/* Blockquotes */
+.reveal blockquote {
+  font-style: italic;
+  background-color: var(--redhat-red-05);
+  border-left: 5px solid var(--redhat-red);
+  padding: 1em;
+  margin: 1em 0;
+  color: var(--redhat-black);
+}
+
+/* Images - no border, generous margin */
+.reveal img {
+  border: none;
+  box-shadow: none;
+  background: transparent;
+  margin: 0.5em 0; /* Reduced from 1em */
+  max-width: 100%;
+  max-height: 60vh; /* Reduced from 70vh to ensure bottom margin */
+  height: auto;
+  object-fit: contain; /* Maintain aspect ratio */
+}
+
+.reveal section img {
+  background: transparent;
+}
+
+/* Slide number */
+.reveal .slide-number {
+  font-family: 'Red Hat Text', sans-serif;
+  font-size: 0.6em;
+  color: var(--redhat-black);
+  background-color: transparent;
+}
+
+/* Progress bar */
+.reveal .progress {
+  background: rgba(0, 0, 0, 0.1);
+  color: var(--redhat-red);
+}
+
+.reveal .progress span {
+  background: var(--redhat-red);
+}
+
+/* Controls (navigation arrows) */
+.reveal .controls {
+  color: var(--redhat-red);
+}
+
+/* Selection (text highlight) */
+::selection {
+  background: var(--redhat-red-20);
+  color: var(--redhat-black);
+}
+
+/* Section dividers - full-width red background */
+.reveal .section-divider {
+  background-color: var(--redhat-red);
+  color: var(--redhat-white);
+  padding: 2em;
+}
+
+.reveal .section-divider h2 {
+  color: var(--redhat-white);
+  font-size: 3em;
+  font-weight: 900;
+  margin: 0;
+}
+
+/* Title slide customization */
+.reveal .title-slide h1 {
+  font-size: 3.5em;
+  font-weight: 900;
+  color: var(--redhat-red);
+  margin-bottom: 0.5em;
+}
+
+.reveal .title-slide h2 {
+  font-size: 1.5em;
+  font-weight: 400;
+  color: var(--redhat-black);
+  margin-bottom: 2em;
+}
+
+/* Accessibility: High contrast mode support */
+@media (prefers-contrast: high) {
+  .reveal {
+    background-color: var(--redhat-white);
+    color: var(--redhat-black);
+  }
+
+  .reveal h1,
+  .reveal h2 {
+    color: var(--redhat-black);
+  }
+
+  .reveal a {
+    color: var(--redhat-red-60);
+    text-decoration: underline;
+  }
+}
+
+/* Print styles */
+@media print {
+  .reveal {
+    background-color: white;
+  }
+
+  .reveal h1,
+  .reveal h2,
+  .reveal h3 {
+    color: black;
+  }
+
+  .reveal a {
+    color: black;
+    text-decoration: underline;
+  }
+}
+
+/* Generous white space - key Red Hat principle */
+.reveal .slides > section,
+.reveal .slides > section > section {
+  padding: 1em 2em 2.5em 2em; /* Further reduced top/bottom padding */
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start; /* Align to top, not center */
+}
+
+/* Prevent content overflow - force scaling if needed */
+.reveal .slides section {
+  max-height: 100vh;
+  overflow: hidden; /* Changed from visible to hidden */
+}
+
+/* Scale down slide content if it exceeds viewport */
+.reveal .slides > section {
+  transform-origin: top center;
+}
+
+/* Auto-scale slide content to fit viewport */
+@media screen {
+  .reveal .slides > section {
+    min-height: 0;
+  }
+
+  /* Force content to fit within available space */
+  .reveal section > * {
+    max-width: 100%;
+  }
+}
+
+/* Reduce heading margin for slides with large images */
+.reveal section:has(img) h2 {
+  margin-bottom: 0.3em;
+  font-size: 1.8em; /* Slightly smaller for image-heavy slides */
+}
+
+/* Special utility classes */
+.reveal .text-red {
+  color: var(--redhat-red);
+}
+
+.reveal .text-white {
+  color: var(--redhat-white);
+}
+
+.reveal .bg-red {
+  background-color: var(--redhat-red);
+  color: var(--redhat-white);
+  padding: 1em;
+}
+
+.reveal .bg-gray {
+  background-color: var(--redhat-gray-10);
+  padding: 1em;
+}
+
+/* Emoji and icons - maintain consistent size */
+.reveal .slides section {
+  font-variant-emoji: text;
+}

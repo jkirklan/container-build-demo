@@ -1,0 +1,38 @@
+# Pre-commit hooks for homelab repository
+# See https://pre-commit.com for more information
+
+repos:
+  # Gitleaks - Secret scanning
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.2
+    hooks:
+      - id: gitleaks
+
+  # Standard pre-commit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      # Prevent large files from being committed (exclude SBOMs)
+      - id: check-added-large-files
+        args: ['--maxkb=500']
+        exclude: '^sboms/.*\.json$'
+
+      # Check for files that would conflict in case-insensitive filesystems
+      - id: check-case-conflict
+
+      # Ensure files end with a newline
+      - id: end-of-file-fixer
+
+      # Trim trailing whitespace
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+
+      # Check YAML syntax
+      - id: check-yaml
+        args: ['--unsafe']  # Allow custom tags in quadlet files
+
+      # Check for merge conflict markers
+      - id: check-merge-conflict
+
+      # Detect private keys
+      - id: detect-private-key

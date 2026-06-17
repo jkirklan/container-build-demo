@@ -1,0 +1,67 @@
+# Demo Task Tracker - UBI Build
+# Multi-stage container build using RHEL Universal Base Images
+# Follows homelab security patterns: npm audit + multi-stage + non-root
+
+# ============================================================================
+# Stage 1: Builder (Node.js with build tools)
+# ============================================================================
+FROM registry.access.redhat.com/ubi9/nodejs-20:latest AS builder
+
+# Run as root for build operations (UBI images default to non-root)
+USER 0
+
+WORKDIR /build/webapp
+
+# Copy package files first (layer caching)
+COPY package*.json ./
+
+# SECURITY: npm audit before install (homelab standard)
+# Fails build if HIGH or CRITICAL vulnerabilities found
+RUN npm audit --production --audit-level=high || \
+    (echo "ERROR: HIGH or CRITICAL vulnerabilities found" && exit 1)
+
+# Install dependencies (npm ci uses package-lock.json)
+RUN npm ci
+
+# Copy application source
+COPY src/ ./src/
+
+# ============================================================================
+# Stage 2: Runtime (Minimal Node.js without build tools)
+# ============================================================================
+FROM registry.access.redhat.com/ubi9/nodejs-20-minimal:latest
+
+# Run as root for package installation and user creation
+USER 0
+
+# Install curl for healthcheck
+RUN microdnf install -y --disablerepo='*' --enablerepo='ubi-9-*' curl-minimal && \
+    microdnf clean all
+
+# Create non-root user (UID 1000 standard)
+RUN useradd -u 1000 -U -s /sbin/nologin webapp
+
+WORKDIR /app
+
+# Copy from builder (chown to webapp user)
+COPY --from=builder --chown=webapp:webapp /build/webapp/node_modules ./node_modules
+COPY --from=builder --chown=webapp:webapp /build/webapp/package*.json ./
+COPY --chown=webapp:webapp src/ ./src/
+
+# Health check (used by Podman quadlets)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+  CMD curl -f http://localhost:3000/health || exit 1
+
+# OCI metadata labels
+LABEL org.opencontainers.image.title="Demo Task Tracker (UBI)"
+LABEL org.opencontainers.image.description="Simple Node.js task tracker on RHEL UBI"
+LABEL org.opencontainers.image.base.name="registry.access.redhat.com/ubi9/nodejs-20-minimal"
+LABEL org.opencontainers.image.version="1.0.0"
+LABEL org.opencontainers.image.vendor="Homelab Demo"
+
+# Switch to non-root user
+USER 1000
+
+EXPOSE 3000
+
+CMD ["node", "src/app.js"]

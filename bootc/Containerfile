@@ -1,0 +1,127 @@
+# Demo Task Tracker - Bootable Container Image
+# Creates a bootable RHEL-based system image with the application built-in
+# Uses Fedora Hummingbird base for minimal attack surface
+#
+# This is NOT a traditional application container - it's a full OS image
+# that can be deployed as a VM or physical system using bootc.
+
+# ============================================================================
+# Stage 1: Application Builder
+# ============================================================================
+FROM registry.access.redhat.com/hi/nodejs:20-builder AS app-builder
+
+USER 0
+WORKDIR /build/webapp
+
+# Copy package files (build context is demo/ directory)
+COPY webapp/package*.json ./
+
+# SECURITY: npm audit before install
+RUN npm audit --production --audit-level=high || \
+    (echo "ERROR: HIGH or CRITICAL vulnerabilities found" && exit 1)
+
+# Install dependencies
+RUN npm ci
+
+# Copy application source
+COPY webapp/src/ ./src/
+
+# ============================================================================
+# Stage 2: Bootable OS Image
+# ============================================================================
+FROM quay.io/centos-bootc/centos-bootc:stream9
+
+# Install PostgreSQL and Node.js runtime
+RUN dnf install -y \
+    postgresql-server \
+    nodejs \
+    && dnf clean all
+
+# Copy application from builder
+COPY --from=app-builder /build/webapp /opt/demo-app/
+
+# Create webapp user
+RUN useradd -r -u 1000 -s /sbin/nologin webapp && \
+    chown -R webapp:webapp /opt/demo-app
+
+# Create PostgreSQL initialization script (runs at first boot via systemd)
+RUN mkdir -p /var/lib/pgsql && \
+    chown -R postgres:postgres /var/lib/pgsql
+
+# Create systemd oneshot service to initialize PostgreSQL on first boot
+RUN cat > /etc/systemd/system/postgresql-init.service << 'EOF'
+[Unit]
+Description=Initialize PostgreSQL Database
+Before=postgresql.service
+ConditionPathExists=!/var/lib/pgsql/data/PG_VERSION
+
+[Service]
+Type=oneshot
+User=postgres
+ExecStart=/usr/bin/postgresql-setup --initdb
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Create systemd service for web app
+RUN cat > /etc/systemd/system/demo-webapp.service << 'EOF'
+[Unit]
+Description=Demo Task Tracker Web Application
+After=network.target postgresql.service postgresql-setup-db.service
+Requires=postgresql.service
+Wants=postgresql-setup-db.service
+
+[Service]
+Type=simple
+User=webapp
+WorkingDirectory=/opt/demo-app
+Environment="NODE_ENV=production"
+Environment="DB_HOST=localhost"
+Environment="DB_PORT=5432"
+Environment="DB_NAME=taskdb"
+Environment="DB_USER=webapp"
+Environment="DB_PASSWORD=demo123"
+ExecStart=/usr/bin/node /opt/demo-app/src/app.js
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Create database setup service (runs once after postgres is ready)
+RUN cat > /etc/systemd/system/postgresql-setup-db.service << 'EOF'
+[Unit]
+Description=Setup PostgreSQL Database for Demo App
+After=postgresql.service
+Requires=postgresql.service
+ConditionPathExists=!/var/lib/pgsql/.db-setup-complete
+
+[Service]
+Type=oneshot
+User=postgres
+ExecStart=/bin/bash -c 'psql -c "CREATE DATABASE taskdb;" && psql -c "CREATE USER webapp WITH PASSWORD '\''demo123'\'';" && psql -c "GRANT ALL PRIVILEGES ON DATABASE taskdb TO webapp;" && touch /var/lib/pgsql/.db-setup-complete'
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Enable services (they will start on boot)
+RUN systemctl enable postgresql-init.service && \
+    systemctl enable postgresql.service && \
+    systemctl enable postgresql-setup-db.service && \
+    systemctl enable demo-webapp.service
+
+# OCI metadata
+LABEL org.opencontainers.image.title="Demo Task Tracker (Bootable)"
+LABEL org.opencontainers.image.description="Bootable OS image with task tracker app"
+LABEL org.opencontainers.image.base.name="quay.io/centos-bootc/centos-bootc:stream9"
+LABEL org.opencontainers.image.version="1.0.0"
+LABEL org.opencontainers.image.vendor="Homelab Demo"
+
+# Note: This image boots as a full OS, not a container
+# Deploy with: bootc install, bootc upgrade, or bootc switch
+# The application runs as a systemd service after boot

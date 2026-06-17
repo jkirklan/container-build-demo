@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Tracker - Container Pipeline Demo</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📋 Task Tracker</h1>
+      <p class="subtitle">Container Build Pipeline Demo - UBI vs RHHI</p>
+    </header>
+
+    <main>
+      <section class="add-task">
+        <h2>Add New Task</h2>
+        <form id="task-form">
+          <input
+            type="text"
+            id="task-title"
+            placeholder="Task title (required)"
+            required
+            maxlength="255"
+          />
+          <textarea
+            id="task-description"
+            placeholder="Description (optional)"
+            rows="3"
+          ></textarea>
+          <button type="submit">Add Task</button>
+        </form>
+      </section>
+
+      <section class="task-list">
+        <h2>Tasks</h2>
+        <div id="tasks-container">
+          <p class="loading">Loading tasks...</p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>Homelab Container Security Demo | <a href="/health" target="_blank">Health Check</a></p>
+    </footer>
+  </div>
+
+  <script>
+    const API_BASE = '/api/tasks';
+
+    // Fetch and display all tasks
+    async function loadTasks() {
+      try {
+        const response = await fetch(API_BASE);
+        const data = await response.json();
+
+        const container = document.getElementById('tasks-container');
+
+        if (data.success && data.tasks.length > 0) {
+          container.innerHTML = data.tasks.map(task => `
+            <div class="task-item ${task.completed ? 'completed' : ''}">
+              <div class="task-content">
+                <h3>${escapeHtml(task.title)}</h3>
+                ${task.description ? `<p>${escapeHtml(task.description)}</p>` : ''}
+                <small>Created: ${new Date(task.created_at).toLocaleString()}</small>
+              </div>
+              <div class="task-actions">
+                <button onclick="toggleComplete(${task.id}, ${!task.completed})" class="btn-toggle">
+                  ${task.completed ? 'Undo' : 'Complete'}
+                </button>
+                <button onclick="deleteTask(${task.id})" class="btn-delete">Delete</button>
+              </div>
+            </div>
+          `).join('');
+        } else {
+          container.innerHTML = '<p class="no-tasks">No tasks yet. Add one above!</p>';
+        }
+      } catch (err) {
+        console.error('Error loading tasks:', err);
+        document.getElementById('tasks-container').innerHTML =
+          '<p class="error">Failed to load tasks. Check database connection.</p>';
+      }
+    }
+
+    // Add a new task
+    document.getElementById('task-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const title = document.getElementById('task-title').value.trim();
+      const description = document.getElementById('task-description').value.trim();
+
+      try {
+        const response = await fetch(API_BASE, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, description }),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          document.getElementById('task-title').value = '';
+          document.getElementById('task-description').value = '';
+          loadTasks();
+        } else {
+          alert('Failed to add task: ' + data.error);
+        }
+      } catch (err) {
+        console.error('Error adding task:', err);
+        alert('Failed to add task');
+      }
+    });
+
+    // Toggle task completion
+    async function toggleComplete(id, completed) {
+      try {
+        const response = await fetch(`${API_BASE}/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ completed }),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          loadTasks();
+        } else {
+          alert('Failed to update task: ' + data.error);
+        }
+      } catch (err) {
+        console.error('Error updating task:', err);
+        alert('Failed to update task');
+      }
+    }
+
+    // Delete a task
+    async function deleteTask(id) {
+      if (!confirm('Are you sure you want to delete this task?')) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE}/${id}`, {
+          method: 'DELETE',
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          loadTasks();
+        } else {
+          alert('Failed to delete task: ' + data.error);
+        }
+      } catch (err) {
+        console.error('Error deleting task:', err);
+        alert('Failed to delete task');
+      }
+    }
+
+    // Escape HTML to prevent XSS
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Load tasks on page load
+    loadTasks();
+  </script>
+</body>
+</html>
