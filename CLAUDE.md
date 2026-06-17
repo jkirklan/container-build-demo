@@ -253,7 +253,7 @@ Archive completed tasks in `TASKS.md` for historical reference.
 
 ## Related Resources
 
-- **Homelab repo**: https://github.com/jkirklan/homelab (deployment target)
+- **Homelab repo**: https://github.com/jkirklan/homelab (deployment target: kvm152)
 - **Red Hat UBI**: https://developers.redhat.com/products/rhel/ubi
 - **Hummingbird**: https://access.redhat.com/products/hummingbird
 - **Bootc project**: https://github.com/containers/bootc
