@@ -378,17 +378,247 @@ Network=demo-net
 - Smaller image sizes
 - Modern stack
 
-### This Demo: Why Both?
+### When to Use Bootc (Image Mode)
+
+✅ **Immutable Infrastructure**
+- OS + application versioned together
+- Atomic updates with rollback capability
+- Reproducible system state
+
+✅ **Edge Deployments**
+- Single image for remote systems
+- Reduced operational complexity
+- Offline-first design
+
+✅ **Appliance Model**
+- Purpose-built systems (kiosks, IoT)
+- Minimal runtime changes
+- Security through immutability
+
+✅ **Regulatory Compliance**
+- Full system audit trail
+- No runtime package changes
+- Verifiable configuration
+
+### This Demo: Why All Three?
 
 **Educational Value:**
-- Shows two valid approaches
-- Demonstrates trade-offs
+- Shows three valid deployment paradigms
+- Demonstrates security vs flexibility trade-offs
 - Highlights decision criteria
 
 **Real-World Comparison:**
-- Same application, different bases
+- Same application, different approaches
 - Apples-to-apples metrics
 - Side-by-side deployment
+
+
+## 🚀 Bootc / Image Mode: The Third Track
+
+### What is Bootc/Image Mode?
+
+**Bootc** (Bootable Containers) represents a fundamentally different paradigm from traditional application containers. Instead of packaging just your application, you package the **entire operating system** as a container image.
+
+**Key Concept**: The container image **IS** the operating system - it boots directly without needing a separate host OS.
+
+### Architecture Comparison
+
+```
+Traditional Containers (UBI/RHHI):
+┌─────────────────────────────┐
+│   Application Container     │
+│   (Your App + Dependencies) │
+└─────────────────────────────┘
+            ↓
+┌─────────────────────────────┐
+│   Container Runtime         │
+│   (Podman, Docker)          │
+└─────────────────────────────┘
+            ↓
+┌─────────────────────────────┐
+│   Host Operating System     │
+│   (RHEL, Fedora, Ubuntu)    │
+└─────────────────────────────┘
+            ↓
+┌─────────────────────────────┐
+│   Hardware / Hypervisor     │
+└─────────────────────────────┘
+
+Bootc / Image Mode:
+┌─────────────────────────────┐
+│   Bootable Container Image  │
+│   ┌─────────────────────┐   │
+│   │ Your Application    │   │
+│   ├─────────────────────┤   │
+│   │ Full OS (RHEL 9)    │   │
+│   │ + Kernel + Systemd  │   │
+│   └─────────────────────┘   │
+└─────────────────────────────┘
+            ↓
+┌─────────────────────────────┐
+│   Hardware / Hypervisor     │
+└─────────────────────────────┘
+```
+
+### RHEL Image Mode + Hummingbird
+
+This demo uses **RHEL Image Mode bootc** with **Hummingbird packages** for the best of both worlds:
+
+| Component | Description | Benefit |
+|-----------|-------------|---------|
+| **RHEL bootc base** | `registry.redhat.io/rhel9/rhel-bootc:latest` | Enterprise OS, 10-year lifecycle, Red Hat support |
+| **Hummingbird packages** | `https://packages.redhat.com/api/pulp-content/public-hummingbird/` | Minimal attack surface, security-hardened |
+| **Systemd services** | postgres-init, postgresql, webapp | Application runs as native system services |
+| **Immutable root** | Read-only filesystem | Security through immutability |
+| **Atomic updates** | `bootc upgrade` + reboot | Rollback capability, no partial updates |
+
+### Deployment Options
+
+Bootc images can be deployed in **three different ways**:
+
+#### 1. As a Virtual Machine
+```bash
+# Convert to VM disk image
+podman run --rm --privileged \
+  -v ./output:/output \
+  quay.io/centos-bootc/bootc-image-builder:latest \
+  --type qcow2 \
+  demo-bootc-rhel:latest
+
+# Boot with libvirt/QEMU
+virt-install --import --disk ./output/disk.qcow2 --os-variant rhel9.0
+```
+
+#### 2. As a Container (with systemd)
+```bash
+# Run bootc image as a container (for testing)
+podman run -d --name demo-bootc \
+  --privileged \
+  --cgroupns=host \
+  -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
+  demo-bootc-rhel:latest /sbin/init
+```
+
+#### 3. On Bare Metal
+```bash
+# Install to physical disk
+bootc install to-disk --image demo-bootc-rhel:latest /dev/sda
+
+# Existing bootc system: switch to new image
+bootc switch demo-bootc-rhel:latest
+systemctl reboot
+```
+
+### Update Workflow
+
+**Traditional containers**: Pull new image, stop old, start new
+**Bootc/Image Mode**: Atomic OS upgrade + reboot
+
+```bash
+# Check for updates
+bootc upgrade --check
+
+# Upgrade to new image version
+bootc upgrade
+
+# Reboot into new version
+systemctl reboot
+
+# Rollback if needed (previous version is kept)
+bootc rollback
+systemctl reboot
+```
+
+### When Bootc Makes Sense
+
+| Use Case | Why Bootc? |
+|----------|------------|
+| **Edge Computing** | Single image, offline-first, reduced ops complexity |
+| **Kiosks/Appliances** | Immutable, purpose-built, minimal maintenance |
+| **Regulated Industries** | Full system audit trail, verifiable state |
+| **Multi-site Deployments** | Same image everywhere, no config drift |
+| **Air-gapped Systems** | Complete OS + app in one artifact |
+
+### When Bootc Doesn't Make Sense
+
+| Scenario | Why Not? |
+|----------|----------|
+| **Multi-tenant platforms** | Each app needs its own OS (wasteful) |
+| **Microservices** | Too heavyweight per service (1-2 GB vs 100-200 MB) |
+| **Rapid development** | Full OS rebuild for every change (slow iteration) |
+| **Shared infrastructure** | Can't run multiple apps on same system |
+
+### Security Benefits
+
+**Immutability**:
+- Root filesystem is read-only at runtime
+- No `dnf install` or package modifications possible
+- Changes require new image + reboot
+
+**Atomic Updates**:
+- Either fully updated or fully rolled back
+- No partial/broken states
+- Previous version always available
+
+**Minimal Attack Surface**:
+- Hummingbird packages reduce installed software
+- No package manager at runtime
+- Systemd-only services (no arbitrary processes)
+
+**Full System Verification**:
+- OS + application versioned together
+- Image signature verification
+- Supply chain transparency via SBOM
+
+### Production Considerations
+
+**For production bootc deployments:**
+
+- [ ] **Authentication**: Replace hardcoded passwords with Podman secrets or Vault
+- [ ] **Firewall**: Configure firewalld rules at build time
+- [ ] **SSH hardening**: Disable password auth, keys only
+- [ ] **Monitoring**: Configure node_exporter or similar for metrics
+- [ ] **Logging**: Forward logs to centralized system (rsyslog, journald forwarding)
+- [ ] **Backups**: Database backup strategy (pgBackRest, Barman)
+- [ ] **Disaster recovery**: Document restore procedures
+- [ ] **Red Hat subscription**: Register system for updates and support
+
+### Building RHEL Image Mode Bootc
+
+**Requirements:**
+- Red Hat subscription (for `registry.redhat.io/rhel9/rhel-bootc:latest`)
+- Or use public alternatives (CentOS Stream bootc, Fedora CoreOS)
+
+**Build command:**
+```bash
+cd bootc
+podman build --platform linux/amd64 -t demo-bootc-rhel:latest -f Containerfile ..
+```
+
+**Authentication (RHEL base):**
+```bash
+# Login to Red Hat registry
+podman login registry.redhat.io
+# Enter Customer Portal credentials
+```
+
+**Alternative (no subscription required):**
+Change `FROM` line in `bootc/Containerfile`:
+```dockerfile
+# RHEL Image Mode (requires subscription)
+FROM registry.redhat.io/rhel9/rhel-bootc:latest
+
+# CentOS Stream (public, no auth required)
+FROM quay.io/centos-bootc/centos-bootc:stream9
+```
+
+### Learn More
+
+- **RHEL Image Mode**: https://developers.redhat.com/articles/rhel-image-mode
+- **Bootc project**: https://github.com/containers/bootc
+- **Hummingbird packages**: https://packages.redhat.com/api/pulp-content/public-hummingbird/
+- **Bootc image builder**: https://github.com/osbuild/bootc-image-builder
+- **Demo bootc README**: [bootc/README.md](bootc/README.md)
 
 ## 🧪 Testing the Demo
 
