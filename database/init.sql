@@ -10,6 +10,10 @@ CREATE TABLE IF NOT EXISTS tasks (
   updated_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Grant permissions to webapp user
+GRANT ALL PRIVILEGES ON TABLE tasks TO webapp;
+GRANT USAGE, SELECT ON SEQUENCE tasks_id_seq TO webapp;
+
 -- Create index on completed status for filtering
 CREATE INDEX IF NOT EXISTS idx_tasks_completed ON tasks(completed);
 

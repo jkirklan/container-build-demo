@@ -27,21 +27,14 @@ RUN npm ci
 COPY webapp/src/ ./src/
 
 # ============================================================================
-# Stage 2: Bootable OS Image (RHEL Image Mode + Hummingbird)
+# Stage 2: Bootable OS Image (RHEL Image Mode)
 # ============================================================================
 FROM registry.redhat.io/rhel9/rhel-bootc:latest
 
-# Add Hummingbird repository for minimal packages
-RUN cat > /etc/yum.repos.d/hummingbird.repo << 'REPO'
-[hummingbird]
-name=Red Hat Hummingbird Packages
-baseurl=https://packages.redhat.com/api/pulp-content/public-hummingbird/
-enabled=1
-gpgcheck=0
-REPO
+# NOTE: Hummingbird public repository not available at this time
+# Using standard RHEL packages - still provides enterprise OS with 10-year lifecycle
 
 # Install PostgreSQL and Node.js runtime
-# Prefer Hummingbird packages where available, fall back to RHEL repos
 RUN dnf install -y \
     postgresql-server \
     nodejs \
@@ -58,6 +51,19 @@ RUN useradd -r -u 1000 -s /sbin/nologin webapp && \
 RUN mkdir -p /var/lib/pgsql && \
     chown -R postgres:postgres /var/lib/pgsql
 
+# Copy database schema
+COPY database/init.sql /opt/demo-app/init.sql
+RUN chmod 644 /opt/demo-app/init.sql
+
+# Create custom pg_hba.conf template for md5 authentication
+# This will be copied during postgresql-init to allow password auth from localhost
+RUN cat > /var/lib/pgsql/pg_hba.conf.template << 'EOF'
+# TYPE  DATABASE        USER            ADDRESS                 METHOD
+local   all             all                                     peer
+host    all             all             127.0.0.1/32            md5
+host    all             all             ::1/128                 md5
+EOF
+
 # Create systemd oneshot service to initialize PostgreSQL on first boot
 RUN cat > /etc/systemd/system/postgresql-init.service << 'EOF'
 [Unit]
@@ -68,7 +74,7 @@ ConditionPathExists=!/var/lib/pgsql/data/PG_VERSION
 [Service]
 Type=oneshot
 User=postgres
-ExecStart=/usr/bin/postgresql-setup --initdb
+ExecStart=/bin/bash -c '/usr/bin/postgresql-setup --initdb && cp /var/lib/pgsql/pg_hba.conf.template /var/lib/pgsql/data/pg_hba.conf'
 RemainAfterExit=yes
 
 [Install]
@@ -112,7 +118,7 @@ ConditionPathExists=!/var/lib/pgsql/.db-setup-complete
 [Service]
 Type=oneshot
 User=postgres
-ExecStart=/bin/bash -c 'psql -c "CREATE DATABASE taskdb;" && psql -c "CREATE USER webapp WITH PASSWORD '\''demo123'\'';" && psql -c "GRANT ALL PRIVILEGES ON DATABASE taskdb TO webapp;" && touch /var/lib/pgsql/.db-setup-complete'
+ExecStart=/bin/bash -c 'psql -c "CREATE DATABASE taskdb;" && psql -c "CREATE USER webapp WITH PASSWORD '\''demo123'\'';" && psql -c "GRANT ALL PRIVILEGES ON DATABASE taskdb TO webapp;" && psql -d taskdb -f /opt/demo-app/init.sql && touch /var/lib/pgsql/.db-setup-complete'
 RemainAfterExit=yes
 
 [Install]
