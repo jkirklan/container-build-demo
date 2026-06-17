@@ -1,9 +1,9 @@
-# Demo Task Tracker - Bootable Container Image
+# Demo Task Tracker - Bootable Container Image (RHEL Image Mode + Hummingbird)
 # Creates a bootable RHEL-based system image with the application built-in
-# Uses Fedora Hummingbird base for minimal attack surface
+# Uses RHEL Image Mode bootc base with Hummingbird packages for minimal attack surface
 #
 # This is NOT a traditional application container - it's a full OS image
-# that can be deployed as a VM or physical system using bootc.
+# that can be deployed as a VM, container, or bare metal using bootc.
 
 # ============================================================================
 # Stage 1: Application Builder
@@ -27,11 +27,21 @@ RUN npm ci
 COPY webapp/src/ ./src/
 
 # ============================================================================
-# Stage 2: Bootable OS Image
+# Stage 2: Bootable OS Image (RHEL Image Mode + Hummingbird)
 # ============================================================================
-FROM quay.io/centos-bootc/centos-bootc:stream9
+FROM registry.redhat.io/rhel9/rhel-bootc:latest
+
+# Add Hummingbird repository for minimal packages
+RUN cat > /etc/yum.repos.d/hummingbird.repo << 'REPO'
+[hummingbird]
+name=Red Hat Hummingbird Packages
+baseurl=https://packages.redhat.com/api/pulp-content/public-hummingbird/
+enabled=1
+gpgcheck=0
+REPO
 
 # Install PostgreSQL and Node.js runtime
+# Prefer Hummingbird packages where available, fall back to RHEL repos
 RUN dnf install -y \
     postgresql-server \
     nodejs \
@@ -78,11 +88,11 @@ Type=simple
 User=webapp
 WorkingDirectory=/opt/demo-app
 Environment="NODE_ENV=production"
-Environment="DB_HOST=localhost"
-Environment="DB_PORT=5432"
-Environment="DB_NAME=taskdb"
-Environment="DB_USER=webapp"
-Environment="DB_PASSWORD=demo123"
+Environment="POSTGRES_HOST=localhost"
+Environment="POSTGRES_PORT=5432"
+Environment="POSTGRES_DB=taskdb"
+Environment="POSTGRES_USER=webapp"
+Environment="POSTGRES_PASSWORD=demo123"
 ExecStart=/usr/bin/node /opt/demo-app/src/app.js
 Restart=always
 RestartSec=10
@@ -116,12 +126,15 @@ RUN systemctl enable postgresql-init.service && \
     systemctl enable demo-webapp.service
 
 # OCI metadata
-LABEL org.opencontainers.image.title="Demo Task Tracker (Bootable)"
-LABEL org.opencontainers.image.description="Bootable OS image with task tracker app"
-LABEL org.opencontainers.image.base.name="quay.io/centos-bootc/centos-bootc:stream9"
+LABEL org.opencontainers.image.title="Demo Task Tracker (Bootable RHEL Image Mode)"
+LABEL org.opencontainers.image.description="Bootable RHEL OS image with task tracker app + Hummingbird packages"
+LABEL org.opencontainers.image.base.name="registry.redhat.io/rhel9/rhel-bootc:latest"
 LABEL org.opencontainers.image.version="1.0.0"
 LABEL org.opencontainers.image.vendor="Homelab Demo"
 
 # Note: This image boots as a full OS, not a container
 # Deploy with: bootc install, bootc upgrade, or bootc switch
 # The application runs as a systemd service after boot
+#
+# Image Mode combines RHEL bootc (enterprise OS) with Hummingbird (minimal packages)
+# for a security-hardened, immutable infrastructure platform

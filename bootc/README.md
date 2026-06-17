@@ -20,21 +20,22 @@ A bootable container is a **full operating system image** packaged as a containe
 ## Architecture
 
 ```
-┌─────────────────────────────────────┐
-│   Bootable Container Image          │
-├─────────────────────────────────────┤
-│ • CentOS Stream 9 base OS           │
-│ • PostgreSQL server                 │
-│ • Node.js runtime                   │
-│ • Task tracker app (/opt/demo-app)  │
-│ • Systemd services (postgres, app)  │
-│ • Network stack, kernel, init       │
-└─────────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│   Bootable Container Image                  │
+├─────────────────────────────────────────────┤
+│ • RHEL 9 Image Mode bootc base OS           │
+│ • Hummingbird minimal packages              │
+│ • PostgreSQL server                         │
+│ • Node.js runtime                           │
+│ • Task tracker app (/opt/demo-app)          │
+│ • Systemd services (postgres, app)          │
+│ • Network stack, kernel, init               │
+└─────────────────────────────────────────────┘
           ↓ bootc install/switch
-┌─────────────────────────────────────┐
-│   Physical/VM System                │
-│   (boots directly into this image)  │
-└─────────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│   Physical/VM/Container System              │
+│   (boots directly into this image)          │
+└─────────────────────────────────────────────┘
 ```
 
 ## Build
@@ -120,12 +121,19 @@ virt-install --import --disk ./output/disk.qcow2 --os-variant rhel9.0
 
 The bootable image includes:
 
-- **Base OS**: CentOS Stream 9 (bootc-compatible)
+- **Base OS**: RHEL 9 Image Mode bootc (enterprise, supported)
+- **Packages**: Hummingbird minimal packages where available
 - **Database**: PostgreSQL 15 with automatic initialization
 - **Runtime**: Node.js 20
 - **Application**: Task tracker in `/opt/demo-app`
 - **Services**: Systemd units for postgres + webapp
 - **Network**: Full network stack, firewall, SSH
+
+**Why RHEL Image Mode + Hummingbird?**
+- RHEL bootc provides enterprise OS with 10-year lifecycle
+- Hummingbird packages minimize attack surface
+- Combines immutable infrastructure with security-hardened packages
+- Best of both worlds: enterprise support + minimal footprint
 
 ## Testing
 
@@ -174,9 +182,10 @@ qemu-system-x86_64 -m 2048 -drive file=output/disk.qcow2
 ## References
 
 - **bootc project**: https://github.com/containers/bootc
-- **CentOS bootc**: https://gitlab.com/CentOS/cloud/bootc
-- **Image Mode RHEL**: https://developers.redhat.com/articles/rhel-image-mode
+- **RHEL Image Mode**: https://developers.redhat.com/articles/rhel-image-mode
+- **Hummingbird packages**: https://packages.redhat.com/api/pulp-content/public-hummingbird/
 - **bootc-image-builder**: https://github.com/osbuild/bootc-image-builder
+- **RHEL bootc base**: `registry.redhat.io/rhel9/rhel-bootc:latest`
 
 ## Why Include This Variant?
 
