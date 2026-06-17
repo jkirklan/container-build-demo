@@ -1,5 +1,12 @@
 # Container Build Pipeline Demo: UBI vs RHHI vs Bootc
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Podman](https://img.shields.io/badge/Podman-892CA0?logo=podman&logoColor=white)](https://podman.io/)
+[![Node.js](https://img.shields.io/badge/Node.js-20-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15%20%7C%2017-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Security: Trivy](https://img.shields.io/badge/Security-Trivy-1904DA?logo=aqua&logoColor=white)](https://trivy.dev/)
+[![SBOM: CycloneDX](https://img.shields.io/badge/SBOM-CycloneDX-00ADD8)](https://cyclonedx.org/)
+
 A comprehensive demonstration of security-first container build and deployment pipelines using three approaches:
 - **UBI** (RHEL Universal Base Images) - Enterprise-grade, flexible, traditional containers
 - **RHHI** (Red Hat Hummingbird Images) - Ultra-minimal distroless containers
