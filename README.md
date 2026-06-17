@@ -38,15 +38,15 @@ This demo showcases:
 | Component | UBI (Container) | RHHI (Distroless) | Bootc (OS Image) |
 |-----------|----------------|-------------------|------------------|
 | **Type** | Application container | Application container | Bootable OS image |
-| **Base** | ubi9/nodejs-20-minimal | hi/nodejs:20 (distroless) | centos-bootc:stream9 |
+| **Base** | ubi9/nodejs-20-minimal | hi/nodejs:20 (distroless) | rhel9/rhel-bootc + Hummingbird |
 | **Total Size** | 645 MB | **276 MB** (58% smaller) | ~1-2 GB (full OS) |
 | **Package Manager** | microdnf ✅ | None (distroless) | dnf (build only) |
 | **Shell Access** | bash ✅ | None (distroless) | SSH (post-boot) |
 | **Runtime** | Podman | Podman | Systemd (native boot) |
 | **Updates** | Pull + restart | Pull + restart | bootc upgrade + reboot |
 | **Isolation** | Namespace/cgroup | Namespace/cgroup | Full system |
-| **Support** | Red Hat Enterprise | Community | Community (RHEL variant available) |
-| **Lifecycle** | 10 years | Rolling (Fedora) | Rolling (CentOS Stream) |
+| **Support** | Red Hat Enterprise | Community (Hummingbird) | Red Hat Enterprise (RHEL) |
+| **Lifecycle** | 10 years | Rolling (Fedora) | 10 years (RHEL) |
 | **Use Case** | General apps | Security-first apps | Appliances, immutable infra |
 
 ## 📁 Directory Structure
