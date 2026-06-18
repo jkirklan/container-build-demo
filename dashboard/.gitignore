@@ -1,0 +1,8 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Runtime status files (generated during builds)
+status/*.json
+
+# Logs are tracked at ../logs/ level
