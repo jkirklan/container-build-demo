@@ -57,27 +57,70 @@ fi
 
 echo "✅ Quadlets copied to $SYSTEMD_DIR"
 
-echo ""
-echo "🔄 Reloading systemd daemon..."
-$USE_SUDO systemctl daemon-reload || systemctl --user daemon-reload
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  # macOS: Run containers directly with podman (no systemd)
+  echo ""
+  echo "⚠️  macOS detected - deploying with podman run (quadlets require Linux/systemd)"
+  echo ""
+  echo "🌐 Creating demo-net network..."
+  podman network create demo-net 2>/dev/null || echo "Network already exists"
 
-echo ""
-echo "🌐 Creating demo-net network..."
-podman network create demo-net || echo "Network already exists"
+  echo ""
+  echo "🚀 Starting database..."
+  podman run -d \
+    --name demo-db-ubi \
+    --network demo-net \
+    -p 5432:5432 \
+    -e POSTGRES_DB=taskdb \
+    -e POSTGRES_USER=taskuser \
+    -e POSTGRES_PASSWORD=demopassword123 \
+    -v "$DATA_DIR/ubi/postgres:/var/lib/pgsql/data:Z" \
+    --health-cmd "pg_isready -U taskuser -d taskdb || exit 1" \
+    --health-interval 30s \
+    ghcr.io/jkirklan/demo-db-ubi:latest || echo "Container already running"
 
-echo ""
-echo "🚀 Starting database..."
-$USE_SUDO systemctl start demo-db-ubi.service || systemctl --user start demo-db-ubi.service
+  echo "⏳ Waiting 15 seconds for database initialization..."
+  sleep 15
 
-echo "⏳ Waiting 15 seconds for database initialization..."
-sleep 15
+  echo ""
+  echo "🚀 Starting web app..."
+  podman run -d \
+    --name demo-webapp-ubi \
+    --network demo-net \
+    -p 3001:3000 \
+    -e POSTGRES_HOST=demo-db-ubi \
+    -e POSTGRES_PORT=5432 \
+    -e POSTGRES_DB=taskdb \
+    -e POSTGRES_USER=taskuser \
+    -e POSTGRES_PASSWORD=demopassword123 \
+    ghcr.io/jkirklan/demo-webapp-ubi:latest || echo "Container already running"
 
-echo ""
-echo "🚀 Starting web app..."
-$USE_SUDO systemctl start demo-webapp-ubi.service || systemctl --user start demo-webapp-ubi.service
+  echo "⏳ Waiting 5 seconds for app startup..."
+  sleep 5
+else
+  # Linux: Use systemd quadlets
+  echo ""
+  echo "🔄 Reloading systemd daemon..."
+  $USE_SUDO systemctl daemon-reload
 
-echo "⏳ Waiting 5 seconds for app startup..."
-sleep 5
+  echo ""
+  echo "🌐 Creating demo-net network..."
+  podman network create demo-net || echo "Network already exists"
+
+  echo ""
+  echo "🚀 Starting database..."
+  $USE_SUDO systemctl start demo-db-ubi.service
+
+  echo "⏳ Waiting 15 seconds for database initialization..."
+  sleep 15
+
+  echo ""
+  echo "🚀 Starting web app..."
+  $USE_SUDO systemctl start demo-webapp-ubi.service
+
+  echo "⏳ Waiting 5 seconds for app startup..."
+  sleep 5
+fi
 
 echo ""
 echo "✅ Demo deployed (UBI)"
@@ -88,10 +131,10 @@ echo "  - Web App:  demo-webapp-ubi (port 3001, container internal: 3000)"
 echo ""
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
-  echo "Check status (macOS rootless):"
-  echo "  systemctl --user status demo-db-ubi"
-  echo "  systemctl --user status demo-webapp-ubi"
+  echo "Check status (macOS):"
   echo "  podman ps"
+  echo "  podman logs demo-db-ubi"
+  echo "  podman logs demo-webapp-ubi"
 else
   echo "Check status (Linux):"
   echo "  sudo systemctl status demo-db-ubi"
