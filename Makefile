@@ -33,7 +33,7 @@ help:
 	@echo "  make all              - Full pipeline for all variants"
 	@echo ""
 	@echo "Live Demo:"
-	@echo "  make dashboard        - Start live dashboard server (port 8888)"
+	@echo "  make dashboard        - Start live dashboard server (port 8889)"
 	@echo "  make demo             - Start dashboard + build all in parallel"
 	@echo ""
 	@echo "Cleanup:"
@@ -112,7 +112,7 @@ demo:
 	@echo "Starting dashboard in background..."
 	cd dashboard && npm install && node server.js > /dev/null 2>&1 &
 	@sleep 2
-	@echo "Dashboard: http://localhost:8888"
+	@echo "Dashboard: http://localhost:8889"
 	@echo ""
 	@echo "Building all variants in parallel..."
 	./scripts/build-demo-parallel.sh

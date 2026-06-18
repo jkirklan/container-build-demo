@@ -56,7 +56,7 @@ npm install
 npm start
 ```
 
-**Dashboard URL:** http://localhost:8888
+**Dashboard URL:** http://localhost:8889
 
 ## How It Works
 
@@ -206,7 +206,7 @@ Get status for all variants.
    make dashboard
    ```
 
-2. Open http://localhost:8888 in browser
+2. Open http://localhost:8889 in browser
 
 3. During presentation, trigger parallel builds:
    ```bash
@@ -249,7 +249,7 @@ make build-parallel
 
 ### Port
 
-Default: `8888`
+Default: `8889`
 
 Override via environment variable:
 
@@ -264,7 +264,7 @@ Default: 50 lines per log request
 Modify in API call:
 
 ```bash
-curl http://localhost:8888/api/logs/ubi?lines=100
+curl http://localhost:8889/api/logs/ubi?lines=100
 ```
 
 ## Development
@@ -301,11 +301,11 @@ dashboard/
 ### "Port already in use"
 
 ```bash
-# Find process using port 8888
-lsof -i :8888
+# Find process using port 8889
+lsof -i :8889
 
 # Kill it
-kill $(lsof -t -i:8888)
+kill $(lsof -t -i:8889)
 
 # Or use different port
 PORT=9999 npm start

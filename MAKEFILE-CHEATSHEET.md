@@ -103,7 +103,7 @@ make all              # All three pipelines
 Start interactive dashboard for presentations.
 
 ```bash
-make dashboard        # Start dashboard server on port 8888
+make dashboard        # Start dashboard server on port 8889
 make demo             # Dashboard + parallel builds
 ```
 
@@ -113,7 +113,7 @@ make demo             # Dashboard + parallel builds
 - Vulnerability counts
 - Image sizes
 
-**Access:** `http://localhost:8888`
+**Access:** `http://localhost:8889`
 
 ## Cleanup
 
@@ -134,7 +134,7 @@ make clean            # Stop containers, remove data
 | RHHI webapp | 3002 | Task tracker (RHHI) |
 | RHHI database | 5433 | PostgreSQL (RHHI) |
 | bootc webapp | 3003 | Task tracker (bootc, reserved) |
-| Dashboard | 8888 | Live demo dashboard |
+| Dashboard | 8889 | Live demo dashboard |
 
 **Note:** Port 3000 is intentionally avoided (conflicts with common dev tools).
 

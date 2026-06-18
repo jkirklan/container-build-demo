@@ -18,7 +18,7 @@ const path = require('path');
 const { EventEmitter } = require('events');
 
 const app = express();
-const PORT = process.env.PORT || 8888;
+const PORT = process.env.PORT || 8889;
 
 const STATUS_DIR = path.join(__dirname, 'status');
 const LOG_DIR = path.join(__dirname, '../logs');
