@@ -1,3 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;700;900&family=Red+Hat+Text:wght@400;500;700&family=Red+Hat+Mono:wght@400;500&display=swap');
+
+:root {
+  --redhat-red: #ee0000;
+  --redhat-black: #000000;
+  --redhat-white: #ffffff;
+  --redhat-gray-10: #f2f2f2;
+  --redhat-gray-95: #151515;
+  --redhat-red-05: #fef0f0;
+  --redhat-red-20: #fbc5c5;
+  --redhat-red-60: #a60000;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -5,32 +18,37 @@
 }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  font-family: 'Red Hat Text', sans-serif;
+  background: var(--redhat-white);
   min-height: 100vh;
   padding: 20px;
-  color: #333;
+  color: var(--redhat-black);
 }
 
 header {
   text-align: center;
-  color: white;
-  margin-bottom: 30px;
+  background: var(--redhat-red);
+  color: var(--redhat-white);
+  padding: 30px 20px;
+  margin: -20px -20px 30px -20px;
+  border-bottom: 5px solid var(--redhat-red-60);
 }
 
 header h1 {
+  font-family: 'Red Hat Display', sans-serif;
   font-size: 2.5rem;
+  font-weight: 900;
   margin-bottom: 10px;
 }
 
 .subtitle {
   font-size: 1.1rem;
-  opacity: 0.9;
+  font-weight: 400;
 }
 
 .version {
   font-size: 0.9rem;
-  opacity: 0.7;
+  opacity: 0.85;
   margin-top: 5px;
 }
 
@@ -68,24 +86,29 @@ header h1 {
 .track {
   background: white;
   border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   transition: transform 0.2s;
+  border: 2px solid var(--redhat-gray-10);
 }
 
 .track:hover {
   transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(238, 0, 0, 0.2);
+  border-color: var(--redhat-red);
 }
 
 .track-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: var(--redhat-red);
+  color: var(--redhat-white);
   padding: 20px;
   text-align: center;
 }
 
 .track-header h2 {
+  font-family: 'Red Hat Display', sans-serif;
   font-size: 1.8rem;
+  font-weight: 700;
   margin-bottom: 5px;
 }
 
@@ -107,7 +130,7 @@ header h1 {
 
 .status-card {
   padding: 20px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--redhat-gray-10);
 }
 
 .status-indicator {
@@ -130,11 +153,11 @@ header h1 {
 }
 
 .status-indicator.pending .status-dot {
-  background: #fbbf24;
+  background: #f59e0b;
 }
 
 .status-indicator.running .status-dot {
-  background: #3b82f6;
+  background: var(--redhat-red);
 }
 
 .status-indicator.completed .status-dot {
@@ -142,11 +165,12 @@ header h1 {
 }
 
 .status-indicator.failed .status-dot {
-  background: #ef4444;
+  background: var(--redhat-red-60);
   animation: none;
 }
 
 .status-text {
+  font-family: 'Red Hat Display', sans-serif;
   font-weight: 600;
   font-size: 1.1rem;
   text-transform: capitalize;
@@ -162,10 +186,10 @@ header h1 {
 .error-message {
   margin-top: 15px;
   padding: 10px;
-  background: #fee2e2;
-  border-left: 3px solid #ef4444;
+  background: var(--redhat-red-05);
+  border-left: 3px solid var(--redhat-red);
   border-radius: 4px;
-  color: #991b1b;
+  color: var(--redhat-red-60);
   font-size: 0.85rem;
   display: none;
 }
@@ -185,42 +209,39 @@ header h1 {
 .start-btn {
   display: inline-block;
   padding: 10px 20px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: #10b981;
   color: white;
   border: none;
   border-radius: 6px;
   font-weight: 600;
   font-size: 0.95rem;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: background-color 0.2s;
 }
 
 .start-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+  background: #059669;
 }
 
 .start-btn:disabled {
   background: #9ca3af;
   cursor: not-allowed;
-  transform: none;
 }
 
 .demo-btn {
   display: inline-block;
   padding: 10px 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: var(--redhat-red);
+  color: var(--redhat-white);
   text-decoration: none;
   border-radius: 6px;
   font-weight: 600;
   font-size: 0.95rem;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: background-color 0.2s;
 }
 
 .demo-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  background: var(--redhat-red-60);
 }
 
 .log-section {
@@ -228,7 +249,9 @@ header h1 {
 }
 
 .log-section h3 {
+  font-family: 'Red Hat Display', sans-serif;
   font-size: 0.9rem;
+  font-weight: 700;
   color: #666;
   margin-bottom: 10px;
   display: flex;
@@ -237,26 +260,26 @@ header h1 {
 }
 
 .refresh-btn {
-  background: #667eea;
-  color: white;
+  background: var(--redhat-red);
+  color: var(--redhat-white);
   border: none;
   border-radius: 4px;
   padding: 4px 12px;
   cursor: pointer;
   font-size: 0.85rem;
-  transition: background 0.2s;
+  transition: background-color 0.2s;
 }
 
 .refresh-btn:hover {
-  background: #5568d3;
+  background: var(--redhat-red-60);
 }
 
 .log-output {
-  background: #1e1e1e;
+  background: var(--redhat-gray-95);
   color: #d4d4d4;
   padding: 15px;
   border-radius: 8px;
-  font-family: 'Courier New', monospace;
+  font-family: 'Red Hat Mono', monospace;
   font-size: 0.75rem;
   line-height: 1.4;
   max-height: 200px;
@@ -274,17 +297,26 @@ header h1 {
 }
 
 .log-output::-webkit-scrollbar-thumb {
-  background: #667eea;
+  background: var(--redhat-red);
   border-radius: 4px;
 }
 
 footer {
   text-align: center;
-  color: white;
+  color: var(--redhat-black);
   margin-top: 30px;
   padding: 20px;
   font-size: 0.9rem;
-  opacity: 0.9;
+  opacity: 0.7;
+}
+
+footer a {
+  color: var(--redhat-red);
+  text-decoration: underline;
+}
+
+footer a:hover {
+  color: var(--redhat-red-60);
 }
 
 /* Responsive design */

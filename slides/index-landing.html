@@ -4,7 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Container Build Demo - Presentation Index</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;700;900&family=Red+Hat+Text:wght@400;500;700&family=Red+Hat+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --redhat-red: #ee0000;
+            --redhat-black: #000000;
+            --redhat-white: #ffffff;
+            --redhat-gray-10: #f2f2f2;
+            --redhat-gray-95: #151515;
+            --redhat-red-05: #fef0f0;
+            --redhat-red-20: #fbc5c5;
+            --redhat-red-60: #a60000;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -12,11 +26,11 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Red Hat Text', sans-serif;
+            background: var(--redhat-white);
             min-height: 100vh;
             padding: 40px 20px;
-            color: #333;
+            color: var(--redhat-black);
         }
 
         .container {
@@ -26,24 +40,30 @@
 
         header {
             text-align: center;
-            color: white;
-            margin-bottom: 50px;
+            background: var(--redhat-red);
+            color: var(--redhat-white);
+            padding: 40px 20px;
+            margin: -40px -20px 50px -20px;
+            border-bottom: 5px solid var(--redhat-red-60);
         }
 
         h1 {
+            font-family: 'Red Hat Display', sans-serif;
             font-size: 2.5rem;
+            font-weight: 900;
             margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            text-transform: none;
         }
 
         .subtitle {
+            font-family: 'Red Hat Text', sans-serif;
             font-size: 1.2rem;
-            opacity: 0.9;
+            font-weight: 400;
         }
 
         .version {
             font-size: 0.9rem;
-            opacity: 0.7;
+            opacity: 0.85;
             margin-top: 5px;
         }
 
@@ -56,11 +76,14 @@
         }
 
         .section h2 {
+            font-family: 'Red Hat Display', sans-serif;
             font-size: 1.8rem;
+            font-weight: 700;
             margin-bottom: 20px;
-            color: #667eea;
-            border-bottom: 3px solid #667eea;
+            color: var(--redhat-red);
+            border-bottom: 3px solid var(--redhat-red);
             padding-bottom: 10px;
+            text-transform: none;
         }
 
         .grid {
@@ -71,22 +94,25 @@
         }
 
         .card {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            background: var(--redhat-white);
             border-radius: 8px;
             padding: 20px;
             transition: transform 0.2s, box-shadow 0.2s;
-            border: 2px solid #e0e0e0;
+            border: 2px solid var(--redhat-gray-10);
         }
 
         .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 8px 20px rgba(238, 0, 0, 0.2);
+            border-color: var(--redhat-red);
         }
 
         .card h3 {
+            font-family: 'Red Hat Display', sans-serif;
             font-size: 1.3rem;
+            font-weight: 700;
             margin-bottom: 10px;
-            color: #333;
+            color: var(--redhat-black);
         }
 
         .card p {
@@ -99,25 +125,27 @@
         .card a {
             display: inline-block;
             padding: 10px 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: var(--redhat-red);
+            color: var(--redhat-white);
             text-decoration: none;
             border-radius: 6px;
             font-weight: 600;
-            transition: opacity 0.2s;
+            transition: background-color 0.2s;
         }
 
         .card a:hover {
-            opacity: 0.9;
+            background: var(--redhat-red-60);
         }
 
         .badge {
             display: inline-block;
-            background: #667eea;
-            color: white;
+            background: var(--redhat-red-05);
+            color: var(--redhat-red);
+            border: 1px solid var(--redhat-red-20);
             padding: 3px 10px;
             border-radius: 12px;
             font-size: 0.75rem;
+            font-weight: 500;
             margin-right: 5px;
             margin-bottom: 5px;
         }
@@ -132,9 +160,20 @@
 
         footer {
             text-align: center;
-            color: white;
+            color: var(--redhat-black);
             margin-top: 40px;
-            opacity: 0.8;
+            padding: 20px;
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        footer a {
+            color: var(--redhat-red);
+            text-decoration: underline;
+        }
+
+        footer a:hover {
+            color: var(--redhat-red-60);
         }
 
         @media (max-width: 768px) {
@@ -227,6 +266,20 @@
                     <p>Local development vs CI/CD pipeline comparison showing security gates and automation.</p>
                     <a href="architecture/pipeline-comparison.png" target="_blank">View PNG →</a>
                     <a href="architecture/pipeline-comparison.mmd" target="_blank">View Source (.mmd) →</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Dashboard Section -->
+        <div class="section">
+            <h2>📈 Live Dashboard</h2>
+            <div class="grid">
+                <div class="card">
+                    <h3>Build Dashboard</h3>
+                    <span class="badge">Real-Time</span>
+                    <span class="badge">4-Track Parallel</span>
+                    <p>Watch all four deployment tracks build in parallel with live log streaming and CVE statistics.</p>
+                    <a href="../dashboard/public/index.html" target="_blank">Open Dashboard →</a>
                 </div>
             </div>
         </div>
