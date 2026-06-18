@@ -59,7 +59,7 @@ build_variant() {
   local start_time=$(date +%s)
 
   # Clear log file from previous runs
-  > "$log_file"
+  echo "=== Build started at $(date '+%Y-%m-%d %H:%M:%S %Z') ===" > "$log_file"
 
   init_status "$variant"
 
