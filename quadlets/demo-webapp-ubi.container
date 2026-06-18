@@ -8,7 +8,7 @@ Wants=demo-db-ubi.service
 ContainerName=demo-webapp-ubi
 Image=ghcr.io/jkirklan/demo-webapp-ubi:latest
 Network=demo-net
-PublishPort=3000:3000
+PublishPort=3001:3000
 
 # Database connection
 Environment=POSTGRES_HOST=demo-db-ubi
@@ -18,7 +18,7 @@ Environment=POSTGRES_USER=taskuser
 Environment=TZ=America/New_York
 Secret=demo-postgres-password,type=env,target=POSTGRES_PASSWORD
 
-# Health check
+# Health check (internal port is still 3000)
 HealthCmd=curl -f http://localhost:3000/health || exit 1
 HealthInterval=30s
 HealthTimeout=10s

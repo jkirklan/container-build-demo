@@ -84,7 +84,7 @@ echo "✅ Demo deployed (UBI)"
 echo ""
 echo "Services:"
 echo "  - Database: demo-db-ubi (port 5432)"
-echo "  - Web App:  demo-webapp-ubi (port 3000)"
+echo "  - Web App:  demo-webapp-ubi (port 3001, container internal: 3000)"
 echo ""
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -100,8 +100,8 @@ fi
 
 echo ""
 echo "Test locally:"
-echo "  curl http://localhost:3000/health"
-echo "  curl http://localhost:3000/api/tasks"
+echo "  curl http://localhost:3001/health"
+echo "  curl http://localhost:3001/api/tasks"
 echo ""
 
 if [[ "$OSTYPE" != "darwin"* ]]; then

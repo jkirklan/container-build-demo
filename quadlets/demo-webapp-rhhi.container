@@ -8,7 +8,7 @@ Wants=demo-db-rhhi.service
 ContainerName=demo-webapp-rhhi
 Image=ghcr.io/jkirklan/demo-webapp-rhhi:latest
 Network=demo-net
-PublishPort=3001:3000
+PublishPort=3002:3000
 
 # Database connection
 Environment=POSTGRES_HOST=demo-db-rhhi
