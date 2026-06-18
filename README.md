@@ -182,20 +182,25 @@ Deployment includes:
 
 **Manual testing:**
 ```bash
-# UBI stack (port 3000)
-curl http://localhost:3000/health
-curl http://localhost:3000/api/tasks
-
-# RHHI stack (port 3001)
+# UBI stack (port 3001)
 curl http://localhost:3001/health
 curl http://localhost:3001/api/tasks
+
+# RHHI stack (port 3002)
+curl http://localhost:3002/health
+curl http://localhost:3002/api/tasks
+
+# bootc (port 3003, when deployed locally)
+curl http://localhost:3003/health
+curl http://localhost:3003/api/tasks
 ```
 
 **4. Access Web UI:**
 
 **Locally:**
-- UBI: http://localhost:3000
-- RHHI: http://localhost:3001
+- UBI: http://localhost:3001
+- RHHI: http://localhost:3002
+- bootc: http://localhost:3003 (when deployed locally)
 
 **Via Traefik (after DNS setup):**
 - UBI: https://demo-ubi.lab.kubelet.org
@@ -286,6 +291,7 @@ echo -n "password" | podman secret create demo-postgres-password -
 
 **Health checks:**
 ```ini
+# Note: Internal container port is 3000, published port varies (3001/3002/3003)
 HealthCmd=curl -f http://localhost:3000/health || exit 1
 HealthInterval=30s
 ```
@@ -639,26 +645,33 @@ Tests run:
 
 **Create a task:**
 ```bash
-curl -X POST http://localhost:3000/api/tasks \
+# UBI (port 3001)
+curl -X POST http://localhost:3001/api/tasks \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Demo Task","description":"Testing the API"}'
+
+# RHHI (port 3002)
+curl -X POST http://localhost:3002/api/tasks \
   -H "Content-Type: application/json" \
   -d '{"title":"Demo Task","description":"Testing the API"}'
 ```
 
 **List tasks:**
 ```bash
-curl http://localhost:3000/api/tasks | jq
+curl http://localhost:3001/api/tasks | jq  # UBI
+curl http://localhost:3002/api/tasks | jq  # RHHI
 ```
 
 **Update task:**
 ```bash
-curl -X PUT http://localhost:3000/api/tasks/1 \
+curl -X PUT http://localhost:3001/api/tasks/1 \
   -H "Content-Type: application/json" \
   -d '{"completed":true}'
 ```
 
 **Delete task:**
 ```bash
-curl -X DELETE http://localhost:3000/api/tasks/1
+curl -X DELETE http://localhost:3001/api/tasks/1
 ```
 
 ### Database Testing
@@ -727,7 +740,7 @@ podman exec -it demo-webapp-rhhi bash
 podman run --rm -it --network container:demo-webapp-rhhi \
   registry.access.redhat.com/ubi9/ubi-minimal bash
 
-# Inside sidecar:
+# Inside sidecar (uses container's internal port 3000):
 curl http://localhost:3000/health
 ```
 

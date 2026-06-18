@@ -44,7 +44,7 @@ sleep 15
 podman run -d \
   --name demo-webapp-ubi \
   --network demo-net \
-  -p 3000:3000 \
+  -p 3001:3000 \
   -e POSTGRES_HOST=demo-db-ubi \
   -e POSTGRES_PORT=5432 \
   -e POSTGRES_DB=taskdb \
@@ -89,18 +89,18 @@ SQL
 
 ```bash
 # Health check
-curl http://localhost:3000/health
+curl http://localhost:3001/health
 
 # List tasks
-curl http://localhost:3000/api/tasks | jq
+curl http://localhost:3001/api/tasks | jq
 
 # Create task
-curl -X POST http://localhost:3000/api/tasks \
+curl -X POST http://localhost:3001/api/tasks \
   -H "Content-Type: application/json" \
   -d '{"title":"Test Demo","description":"Testing UBI stack locally"}' | jq
 
 # Web UI
-open http://localhost:3000
+open http://localhost:3001
 ```
 
 ### 4. Stop
@@ -135,7 +135,7 @@ sleep 15
 podman run -d \
   --name demo-webapp-rhhi \
   --network demo-net \
-  -p 3000:3000 \
+  -p 3002:3000 \
   -e POSTGRES_HOST=demo-db-rhhi \
   -e POSTGRES_PORT=5432 \
   -e POSTGRES_DB=taskdb \
@@ -175,7 +175,21 @@ SQL
 
 ### 3. Test
 
-Same commands as UBI testing (webapp runs on same port 3000).
+```bash
+# Health check
+curl http://localhost:3002/health
+
+# List tasks
+curl http://localhost:3002/api/tasks | jq
+
+# Create task
+curl -X POST http://localhost:3002/api/tasks \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Test RHHI","description":"Testing RHHI stack locally"}' | jq
+
+# Web UI
+open http://localhost:3002
+```
 
 ### 4. Stop
 
