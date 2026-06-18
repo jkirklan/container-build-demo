@@ -71,9 +71,9 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     --name demo-db-ubi \
     --network demo-net \
     -p 5432:5432 \
-    -e POSTGRES_DB=taskdb \
-    -e POSTGRES_USER=taskuser \
-    -e POSTGRES_PASSWORD=demopassword123 \
+    -e POSTGRESQL_DATABASE=taskdb \
+    -e POSTGRESQL_USER=taskuser \
+    -e POSTGRESQL_PASSWORD=demopassword123 \
     -v "$DATA_DIR/ubi/postgres:/var/lib/pgsql/data:Z" \
     --health-cmd "pg_isready -U taskuser -d taskdb || exit 1" \
     --health-interval 30s \

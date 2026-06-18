@@ -11,11 +11,14 @@ LABEL org.opencontainers.image.base.name="registry.redhat.io/rhel9/postgresql-15
 LABEL org.opencontainers.image.version="15"
 LABEL org.opencontainers.image.vendor="Homelab Demo"
 
-# Copy initialization script to standard location
-# Red Hat PostgreSQL image runs scripts from /usr/share/container-scripts/postgresql/start/
+# Copy initialization scripts to standard location
+# Red Hat PostgreSQL image sources .sh files from /usr/share/container-scripts/postgresql/start/
 USER 0
-COPY init.sql /usr/share/container-scripts/postgresql/start/init.sql
-RUN chown 26:26 /usr/share/container-scripts/postgresql/start/init.sql
+COPY ../init.sql /usr/share/container-scripts/postgresql/start/init.sql
+COPY ../init-wrapper.sh /usr/share/container-scripts/postgresql/start/init-wrapper.sh
+RUN chown 26:26 /usr/share/container-scripts/postgresql/start/init.sql && \
+    chown 26:26 /usr/share/container-scripts/postgresql/start/init-wrapper.sh && \
+    chmod +x /usr/share/container-scripts/postgresql/start/init-wrapper.sh
 
 # Switch back to postgres user (UID 26 in Red Hat images)
 USER 26
