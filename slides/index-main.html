@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Container Build Pipeline Demo - UBI vs RHHI vs bootc</title>
+
+    <!-- reveal.js Core CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/dist/reset.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/dist/reveal.css">
+
+    <!-- Default Theme (will be replaced by theme switcher) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/dist/theme/white.css" id="theme-css">
+
+    <!-- Syntax highlighting -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/plugin/highlight/monokai.css">
+
+    <style>
+        /* Theme switcher button styling */
+        #theme-switcher {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: #fff;
+            border: 2px solid #333;
+            border-radius: 5px;
+            padding: 8px 16px;
+            font-family: 'Red Hat Text', 'Arial', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        #theme-switcher:hover {
+            background: #f0f0f0;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+        }
+
+        #theme-switcher.redhat-active {
+            background: #ee0000;
+            color: #fff;
+            border-color: #ee0000;
+        }
+
+        #theme-switcher.redhat-active:hover {
+            background: #c00000;
+        }
+    </style>
+</head>
+<body>
+    <!-- Theme Switcher Button -->
+    <button id="theme-switcher" onclick="toggleTheme()">
+        <span id="theme-label">Switch to Red Hat Theme</span>
+    </button>
+
+    <div class="reveal">
+        <div class="slides">
+            <section data-markdown="demo-presentation.md"
+                     data-separator="^---$"
+                     data-separator-vertical="^--$"
+                     data-separator-notes="^Note:">
+            </section>
+        </div>
+    </div>
+
+    <!-- reveal.js Core Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/dist/reveal.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/plugin/markdown/markdown.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/plugin/highlight/highlight.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/plugin/notes/notes.js"></script>
+
+    <script>
+        // Theme switcher functionality
+        const THEMES = {
+            default: {
+                css: 'https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/dist/theme/white.css',
+                label: 'Switch to Red Hat Theme',
+                buttonClass: ''
+            },
+            redhat: {
+                css: 'redhat-theme.css',
+                label: 'Switch to Default Theme',
+                buttonClass: 'redhat-active'
+            }
+        };
+
+        // Load saved theme preference or default to 'default'
+        let currentTheme = localStorage.getItem('presentation-theme') || 'default';
+
+        function toggleTheme() {
+            // Switch theme
+            currentTheme = (currentTheme === 'default') ? 'redhat' : 'default';
+
+            // Save preference
+            localStorage.setItem('presentation-theme', currentTheme);
+
+            // Apply theme
+            applyTheme(currentTheme);
+        }
+
+        function applyTheme(themeName) {
+            const theme = THEMES[themeName];
+            const themeLink = document.getElementById('theme-css');
+            const button = document.getElementById('theme-switcher');
+            const label = document.getElementById('theme-label');
+
+            // Update CSS
+            themeLink.href = theme.css;
+
+            // Update button
+            button.className = theme.buttonClass;
+            label.textContent = theme.label;
+        }
+
+        // Apply saved theme on load
+        applyTheme(currentTheme);
+
+        // Initialize reveal.js
+        Reveal.initialize({
+            hash: true,
+            slideNumber: 'c/t', // current/total (will hide on first slide via CSS)
+            transition: 'slide',
+            width: 1280,
+            height: 720,
+            margin: 0.04,
+            minScale: 0.2,
+            maxScale: 2.0,
+            plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ],
+            markdown: {
+                smartypants: true
+            }
+        });
+
+        // Hide slide number on first slide (title page)
+        Reveal.on('slidechanged', event => {
+            const slideNumber = document.querySelector('.slide-number');
+            if (event.indexh === 0) {
+                slideNumber.style.display = 'none';
+            } else {
+                slideNumber.style.display = 'block';
+            }
+        });
+
+        // Also hide on initial load if on first slide
+        Reveal.on('ready', event => {
+            const slideNumber = document.querySelector('.slide-number');
+            if (event.indexh === 0) {
+                slideNumber.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
