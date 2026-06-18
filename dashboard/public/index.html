@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RHEL Demo Dashboard - Three Deployment Tracks</title>
+  <title>RHEL Demo Dashboard - Four Deployment Tracks</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header>
     <h1>🚀 RHEL Container Build Pipeline</h1>
-    <p class="subtitle">Three Deployment Paradigms in Parallel</p>
+    <p class="subtitle">Four Deployment Paradigms in Parallel</p>
+    <p class="version">v1.1 (2026-06-18)</p>
   </header>
 
   <div class="dashboard">
@@ -30,6 +31,14 @@
           <div class="time" id="time-ubi">-</div>
         </div>
         <div class="error-message" id="error-ubi"></div>
+        <div class="demo-actions">
+          <button class="start-btn" data-variant="ubi" id="start-btn-ubi">
+            🚀 Start Instances
+          </button>
+          <a href="http://kvm152.lab.kubelet.org:3001" target="_blank" class="demo-btn" id="demo-btn-ubi">
+            🌐 Open Demo
+          </a>
+        </div>
       </div>
       <div class="log-section">
         <h3>Build Log <button class="refresh-btn" data-variant="ubi">↻</button></h3>
@@ -54,6 +63,14 @@
           <div class="time" id="time-rhhi">-</div>
         </div>
         <div class="error-message" id="error-rhhi"></div>
+        <div class="demo-actions">
+          <button class="start-btn" data-variant="rhhi" id="start-btn-rhhi">
+            🚀 Start Instances
+          </button>
+          <a href="http://kvm152.lab.kubelet.org:3002" target="_blank" class="demo-btn" id="demo-btn-rhhi">
+            🌐 Open Demo
+          </a>
+        </div>
       </div>
       <div class="log-section">
         <h3>Build Log <button class="refresh-btn" data-variant="rhhi">↻</button></h3>
@@ -61,11 +78,11 @@
       </div>
     </div>
 
-    <!-- bootc Track -->
+    <!-- UBI bootc Track -->
     <div class="track" id="track-bootc">
       <div class="track-header">
-        <h2>bootc</h2>
-        <p>Image Mode / Bootable Container</p>
+        <h2>UBI bootc</h2>
+        <p>UBI Image Mode / Bootable Container</p>
         <span class="track-badge">Immutable OS</span>
       </div>
       <div class="status-card" id="status-bootc">
@@ -78,16 +95,56 @@
           <div class="time" id="time-bootc">-</div>
         </div>
         <div class="error-message" id="error-bootc"></div>
+        <div class="demo-actions">
+          <button class="start-btn" data-variant="bootc" id="start-btn-bootc">
+            🚀 Start Instances
+          </button>
+          <a href="http://kvm152.lab.kubelet.org:3003" target="_blank" class="demo-btn" id="demo-btn-bootc">
+            🌐 Open Demo
+          </a>
+        </div>
       </div>
       <div class="log-section">
         <h3>Build Log <button class="refresh-btn" data-variant="bootc">↻</button></h3>
         <pre class="log-output" id="log-bootc">Waiting for build to start...</pre>
       </div>
     </div>
+
+    <!-- RHHI bootc Track -->
+    <div class="track" id="track-bootc-rhhi">
+      <div class="track-header">
+        <h2>RHHI bootc</h2>
+        <p>Hummingbird Image Mode / Bootable Container</p>
+        <span class="track-badge">Minimal OS</span>
+      </div>
+      <div class="status-card" id="status-bootc-rhhi">
+        <div class="status-indicator pending">
+          <span class="status-dot"></span>
+          <span class="status-text">Pending</span>
+        </div>
+        <div class="phase-info">
+          <div class="phase">Phase: <span id="phase-bootc-rhhi">-</span></div>
+          <div class="time" id="time-bootc-rhhi">-</div>
+        </div>
+        <div class="error-message" id="error-bootc-rhhi"></div>
+        <div class="demo-actions">
+          <button class="start-btn" data-variant="bootc-rhhi" id="start-btn-bootc-rhhi">
+            🚀 Start Instances
+          </button>
+          <a href="http://kvm152.lab.kubelet.org:3004" target="_blank" class="demo-btn" id="demo-btn-bootc-rhhi">
+            🌐 Open Demo
+          </a>
+        </div>
+      </div>
+      <div class="log-section">
+        <h3>Build Log <button class="refresh-btn" data-variant="bootc-rhhi">↻</button></h3>
+        <pre class="log-output" id="log-bootc-rhhi">Waiting for build to start...</pre>
+      </div>
+    </div>
   </div>
 
   <footer>
-    <p>Security Gates: npm audit → Trivy secret scan → Trivy CVE scan → SBOM generation</p>
+    <p>Security Gates: gitleaks pre-commit → npm audit → Trivy CVE scan → SBOM generation</p>
   </footer>
 
   <script src="dashboard.js"></script>

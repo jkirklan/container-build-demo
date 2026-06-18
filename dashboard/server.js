@@ -46,7 +46,7 @@ app.get('/events', (req, res) => {
   res.setHeader('Connection', 'keep-alive');
 
   // Send initial status for all variants
-  const variants = ['ubi', 'rhhi', 'bootc'];
+  const variants = ['ubi', 'rhhi', 'bootc', 'bootc-rhhi'];
   variants.forEach(variant => {
     const status = readStatus(variant);
     res.write(`data: ${JSON.stringify({ variant, ...status })}\n\n`);
@@ -90,7 +90,8 @@ app.get('/api/logs/:variant', (req, res) => {
   const logFiles = {
     ubi: path.join(LOG_DIR, 'build-ubi.log'),
     rhhi: path.join(LOG_DIR, 'build-rhhi.log'),
-    bootc: path.join(LOG_DIR, 'build-bootc.log')
+    bootc: path.join(LOG_DIR, 'build-bootc.log'),
+    'bootc-rhhi': path.join(LOG_DIR, 'build-bootc-rhhi.log')
   };
 
   const logFile = logFiles[variant];
@@ -111,11 +112,43 @@ app.get('/api/logs/:variant', (req, res) => {
  * API endpoint to list all variants
  */
 app.get('/api/variants', (req, res) => {
-  const variants = ['ubi', 'rhhi', 'bootc'].map(variant => ({
+  const variants = ['ubi', 'rhhi', 'bootc', 'bootc-rhhi'].map(variant => ({
     variant,
     ...readStatus(variant)
   }));
   res.json({ variants });
+});
+
+/**
+ * API endpoint to start instances for a variant
+ */
+app.post('/api/start/:variant', (req, res) => {
+  const { variant } = req.params;
+  const { spawn } = require('child_process');
+
+  const scriptPath = path.join(__dirname, '../scripts', `start-demo-${variant}.sh`);
+
+  // Check if start script exists
+  if (!fs.existsSync(scriptPath)) {
+    return res.status(404).json({
+      error: 'Start script not found',
+      message: `Script ${scriptPath} does not exist. Run 'make create-start-scripts' to generate deployment scripts.`
+    });
+  }
+
+  // Execute start script
+  const child = spawn(scriptPath, [], {
+    detached: true,
+    stdio: 'ignore'
+  });
+
+  child.unref();
+
+  res.json({
+    variant,
+    status: 'starting',
+    message: `Started ${variant} instances`
+  });
 });
 
 /**
@@ -152,7 +185,7 @@ function readStatus(variant) {
  * Watch status directory for changes and emit events
  */
 function watchStatusFiles() {
-  const variants = ['ubi', 'rhhi', 'bootc'];
+  const variants = ['ubi', 'rhhi', 'bootc', 'bootc-rhhi'];
 
   variants.forEach(variant => {
     const statusFile = path.join(STATUS_DIR, `${variant}.json`);

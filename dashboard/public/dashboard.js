@@ -3,7 +3,7 @@
  * Connects to SSE endpoint for real-time status updates
  */
 
-const VARIANTS = ['ubi', 'rhhi', 'bootc'];
+const VARIANTS = ['ubi', 'rhhi', 'bootc', 'bootc-rhhi'];
 
 /**
  * Initialize SSE connection for real-time updates
@@ -139,6 +139,41 @@ function setupRefreshButtons() {
 }
 
 /**
+ * Setup start instance buttons
+ */
+function setupStartButtons() {
+  document.querySelectorAll('.start-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const variant = btn.dataset.variant;
+      btn.disabled = true;
+      btn.textContent = '⏳ Starting...';
+
+      try {
+        const response = await fetch(`/api/start/${variant}`, {
+          method: 'POST'
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        btn.textContent = '✅ Started';
+
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.textContent = '🚀 Start Instances';
+        }, 3000);
+      } catch (err) {
+        console.error(`Failed to start ${variant}:`, err);
+        btn.textContent = '❌ Failed';
+        btn.disabled = false;
+      }
+    });
+  });
+}
+
+/**
  * Load initial status for all variants
  */
 async function loadInitialStatus() {
@@ -169,6 +204,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Setup refresh buttons
   setupRefreshButtons();
+
+  // Setup start instance buttons
+  setupStartButtons();
 
   // Auto-refresh logs every 5 seconds for running builds
   setInterval(() => {

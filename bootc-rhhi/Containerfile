@@ -1,0 +1,54 @@
+# RHHI bootc - Red Hat Hummingbird bootable container
+# Base: Hummingbird Community bootc OS (Fedora-based minimal)
+# Builds full bootable OS image with task tracker application
+
+FROM quay.io/hummingbird-community/bootc-os:latest
+
+# Install Node.js runtime (minimal approach for RHHI)
+RUN dnf install -y nodejs && dnf clean all
+
+# Create application user
+RUN useradd -u 1000 -U -s /sbin/nologin webapp
+
+# Copy application from build context (build context is demo/ directory)
+COPY --chown=webapp:webapp webapp/src /opt/webapp/src
+COPY --chown=webapp:webapp webapp/package.json /opt/webapp/
+COPY --chown=webapp:webapp webapp/package-lock.json /opt/webapp/
+
+# Install dependencies
+WORKDIR /opt/webapp
+RUN npm ci --omit=dev && npm cache clean --force
+
+# Create systemd service for webapp
+RUN cat > /etc/systemd/system/webapp.service <<'EOF'
+[Unit]
+Description=Demo Task Tracker Web Application (RHHI)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=webapp
+WorkingDirectory=/opt/webapp
+ExecStart=/usr/bin/node src/app.js
+Restart=always
+RestartSec=10
+Environment="PORT=3000"
+Environment="POSTGRES_HOST=localhost"
+Environment="POSTGRES_PORT=5432"
+Environment="POSTGRES_DB=taskdb"
+Environment="POSTGRES_USER=taskuser"
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Enable webapp service
+RUN systemctl enable webapp.service
+
+# Metadata
+LABEL org.opencontainers.image.title="Demo Task Tracker (RHHI bootc)"
+LABEL org.opencontainers.image.description="Bootable container with Node.js webapp on Hummingbird OS"
+LABEL org.opencontainers.image.base.name="quay.io/hummingbird-community/bootc-os"
+
+EXPOSE 3000

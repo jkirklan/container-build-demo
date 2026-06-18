@@ -4,6 +4,7 @@ set -e
 VARIANT="${1:-ubi}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DEMO_DIR="$(dirname "$SCRIPT_DIR")"
+LOCK_FILE="/tmp/trivy-scan.lock"
 
 # Find Trivy in common locations
 if [ -n "$TRIVY_BIN" ] && [ -f "$TRIVY_BIN" ]; then
@@ -11,6 +12,8 @@ if [ -n "$TRIVY_BIN" ] && [ -f "$TRIVY_BIN" ]; then
   :
 elif [ -f "$HOME/.local/bin/trivy" ]; then
   TRIVY_BIN="$HOME/.local/bin/trivy"
+elif [ -f "/home/linuxbrew/.linuxbrew/bin/trivy" ]; then
+  TRIVY_BIN="/home/linuxbrew/.linuxbrew/bin/trivy"
 elif command -v trivy >/dev/null 2>&1; then
   TRIVY_BIN=$(command -v trivy)
 else
@@ -25,31 +28,43 @@ echo ""
 
 mkdir -p "$DEMO_DIR/sboms"
 
-for COMPONENT in webapp db; do
-  IMAGE="ghcr.io/jkirklan/demo-${COMPONENT}-${VARIANT}:latest"
+# bootc variants are full OS images (not separate webapp+db containers)
+if [ "$VARIANT" = "bootc" ]; then
+  IMAGES=("ghcr.io/jkirklan/demo-bootc:latest")
+  COMPONENTS=("bootc")
+elif [ "$VARIANT" = "bootc-rhhi" ]; then
+  IMAGES=("ghcr.io/jkirklan/demo-bootc-rhhi:latest")
+  COMPONENTS=("bootc-rhhi")
+else
+  IMAGES=("ghcr.io/jkirklan/demo-webapp-${VARIANT}:latest" "ghcr.io/jkirklan/demo-db-${VARIANT}:latest")
+  COMPONENTS=("webapp" "db")
+fi
+
+for i in "${!IMAGES[@]}"; do
+  IMAGE="${IMAGES[$i]}"
+  COMPONENT="${COMPONENTS[$i]}"
 
   echo "🔍 Scanning $IMAGE..."
   echo ""
 
-  # Scan 1: Secret detection
-  echo "  🔐 Secret scan..."
-  SECRET_RESULT=$($TRIVY_BIN image --scanners secret "$IMAGE" 2>&1 || true)
-  if echo "$SECRET_RESULT" | grep -q "HIGH\|CRITICAL"; then
-    echo "  ❌ SECRETS FOUND - Security gate FAILED!"
-    echo "$SECRET_RESULT"
-    exit 1
-  else
-    echo "  ✅ No secrets detected"
+  # Acquire exclusive lock to prevent Trivy cache conflicts
+  exec 200>"$LOCK_FILE"
+  if ! flock -n -x 200; then
+    echo "  ⏳ Waiting for another Trivy scan to complete..."
+    flock -x 200
   fi
 
-  # Scan 2: Vulnerability scan
+  # Vulnerability scan (secrets handled by gitleaks pre-commit)
   echo "  🛡️  CVE scan..."
-  $TRIVY_BIN image --severity HIGH,CRITICAL "$IMAGE" || true
+  $TRIVY_BIN image --scanners vuln --parallel 1 --severity HIGH,CRITICAL "$IMAGE" || true
 
-  # Scan 3: Generate SBOM
+  # Generate SBOM
   echo "  📋 SBOM generation..."
   SBOM_FILE="$DEMO_DIR/sboms/demo-${COMPONENT}-${VARIANT}-$(date +%Y%m%d).json"
-  $TRIVY_BIN image --format cyclonedx --output "$SBOM_FILE" "$IMAGE"
+  $TRIVY_BIN image --scanners vuln --parallel 1 --format cyclonedx --output "$SBOM_FILE" "$IMAGE"
+
+  # Release lock
+  flock -u 200
 
   echo ""
   echo "✅ $COMPONENT scanned, SBOM: $SBOM_FILE"

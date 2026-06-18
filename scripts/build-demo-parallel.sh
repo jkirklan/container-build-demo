@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Build all three demo variants in parallel with status tracking
+# Build all four demo variants in parallel with status tracking
 # Outputs JSON status files for dashboard consumption
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -56,6 +56,10 @@ build_variant() {
   local variant="$1"
   local build_script="$SCRIPT_DIR/build-demo-${variant}.sh"
   local log_file="$LOG_DIR/build-${variant}.log"
+  local start_time=$(date +%s)
+
+  # Clear log file from previous runs
+  > "$log_file"
 
   init_status "$variant"
 
@@ -83,53 +87,137 @@ build_variant() {
     return 1
   fi
 
-  # Complete
+  # Calculate total time
+  local end_time=$(date +%s)
+  local total_time=$((end_time - start_time))
+  local total_min=$((total_time / 60))
+  local total_sec=$((total_time % 60))
+
+  # Get CVE counts from SBOM files
+  local cve_count=0
+  if [[ "$variant" == "bootc" || "$variant" == "bootc-rhhi" ]]; then
+    # bootc variants have single image
+    local component_name="${variant/bootc-/bootc-}"  # bootc or bootc-rhhi
+    local sbom_file="$DEMO_DIR/sboms/demo-${component_name}-${component_name}-$(date +%Y%m%d).json"
+    cve_count=$(grep -c "HIGH\|CRITICAL" "$sbom_file" 2>/dev/null || echo "0")
+    # Remove leading zeros for arithmetic
+    cve_count=$((10#$cve_count))
+  else
+    # Container variants have webapp + db
+    local webapp_sbom="$DEMO_DIR/sboms/demo-webapp-${variant}-$(date +%Y%m%d).json"
+    local db_sbom="$DEMO_DIR/sboms/demo-db-${variant}-$(date +%Y%m%d).json"
+    local webapp_cves=$(grep -c "HIGH\|CRITICAL" "$webapp_sbom" 2>/dev/null || echo "0")
+    local db_cves=$(grep -c "HIGH\|CRITICAL" "$db_sbom" 2>/dev/null || echo "0")
+    # Remove leading zeros for arithmetic
+    webapp_cves=$((10#$webapp_cves))
+    db_cves=$((10#$db_cves))
+    cve_count=$((webapp_cves + db_cves))
+  fi
+
+  # Complete with statistics
   update_status "$variant" "completed" "scan"
-  echo "✅ $variant variant built and scanned successfully" | tee -a "$log_file"
+  echo "" | tee -a "$log_file"
+  echo "✅ $variant variant completed!" | tee -a "$log_file"
+  echo "📊 Total time: ${total_min}m ${total_sec}s | CVEs: $cve_count HIGH/CRITICAL" | tee -a "$log_file"
+  echo "" | tee -a "$log_file"
   return 0
 }
 
 echo "========================================="
-echo "  Parallel Demo Build (UBI + RHHI + bootc)"
+echo "  Parallel Demo Build (4 tracks)"
 echo "========================================="
 echo ""
-echo "Building all three variants in parallel..."
+echo "Building all four variants in parallel..."
+echo "  1. UBI containers"
+echo "  2. RHHI containers"
+echo "  3. UBI bootc"
+echo "  4. RHHI bootc"
+echo ""
 echo "Status: $STATUS_DIR/"
 echo "Logs: $LOG_DIR/"
 echo ""
 
-# Launch builds in parallel
+# Launch builds in parallel (fastest first, UBI bootc last)
+# Order: RHHI containers, UBI containers, RHHI bootc, then UBI bootc
+build_variant "rhhi" &
+pid_rhhi=$!
+
 build_variant "ubi" &
 pid_ubi=$!
 
-build_variant "rhhi" &
-pid_rhhi=$!
+build_variant "bootc-rhhi" &
+pid_bootc_rhhi=$!
+
+# 1-minute delay before starting UBI bootc (slowest build - let others get ahead)
+echo "⏸️  Delaying UBI bootc start by 1 minute to prioritize faster builds..."
+sleep 60
 
 build_variant "bootc" &
 pid_bootc=$!
 
-# Wait for all builds
-wait $pid_ubi
-result_ubi=$?
-
+# Wait for all builds (RHHI → UBI → RHHI bootc → UBI bootc)
 wait $pid_rhhi
 result_rhhi=$?
 
+wait $pid_ubi
+result_ubi=$?
+
 wait $pid_bootc
 result_bootc=$?
+
+wait $pid_bootc_rhhi
+result_bootc_rhhi=$?
 
 # Summary
 echo ""
 echo "========================================="
 echo "  Build Summary"
 echo "========================================="
-echo "UBI:   $(jq -r .status "$STATUS_DIR/ubi.json")"
-echo "RHHI:  $(jq -r .status "$STATUS_DIR/rhhi.json")"
-echo "bootc: $(jq -r .status "$STATUS_DIR/bootc.json")"
+printf "%-15s %-12s %-15s %s\n" "Variant" "Status" "Time" "CVEs"
+printf "%-15s %-12s %-15s %s\n" "---------------" "------------" "---------------" "----"
+
+for variant in ubi rhhi bootc bootc-rhhi; do
+  status=$(jq -r .status "$STATUS_DIR/${variant}.json" 2>/dev/null || echo "unknown")
+  start=$(jq -r .start_time "$STATUS_DIR/${variant}.json" 2>/dev/null)
+  end=$(jq -r .end_time "$STATUS_DIR/${variant}.json" 2>/dev/null)
+
+  # Calculate time
+  if [[ "$end" != "null" && "$start" != "null" ]]; then
+    start_epoch=$(date -u -j -f "%Y-%m-%dT%H:%M:%SZ" "$start" +%s 2>/dev/null || date -d "$start" +%s 2>/dev/null)
+    end_epoch=$(date -u -j -f "%Y-%m-%dT%H:%M:%SZ" "$end" +%s 2>/dev/null || date -d "$end" +%s 2>/dev/null)
+    duration=$((end_epoch - start_epoch))
+    duration_min=$((duration / 60))
+    duration_sec=$((duration % 60))
+    time_str="${duration_min}m ${duration_sec}s"
+  else
+    time_str="-"
+  fi
+
+  # Get CVE count
+  if [[ "$variant" == "bootc" || "$variant" == "bootc-rhhi" ]]; then
+    component_name="${variant/bootc-/bootc-}"
+    sbom_file="$DEMO_DIR/sboms/demo-${component_name}-${component_name}-$(date +%Y%m%d).json"
+    cve_count=$(grep -c "HIGH\|CRITICAL" "$sbom_file" 2>/dev/null || echo "0")
+    # Remove leading zeros for arithmetic
+    cve_count=$((10#$cve_count))
+  else
+    webapp_sbom="$DEMO_DIR/sboms/demo-webapp-${variant}-$(date +%Y%m%d).json"
+    db_sbom="$DEMO_DIR/sboms/demo-db-${variant}-$(date +%Y%m%d).json"
+    webapp_cves=$(grep -c "HIGH\|CRITICAL" "$webapp_sbom" 2>/dev/null || echo "0")
+    db_cves=$(grep -c "HIGH\|CRITICAL" "$db_sbom" 2>/dev/null || echo "0")
+    # Remove leading zeros for arithmetic
+    webapp_cves=$((10#$webapp_cves))
+    db_cves=$((10#$db_cves))
+    cve_count=$((webapp_cves + db_cves))
+  fi
+
+  printf "%-15s %-12s %-15s %s\n" "$variant" "$status" "$time_str" "$cve_count"
+done
+
 echo ""
 
 # Exit with error if any build failed
-if [[ $result_ubi -ne 0 || $result_rhhi -ne 0 || $result_bootc -ne 0 ]]; then
+if [[ $result_ubi -ne 0 || $result_rhhi -ne 0 || $result_bootc -ne 0 || $result_bootc_rhhi -ne 0 ]]; then
   echo "❌ One or more builds failed"
   exit 1
 fi

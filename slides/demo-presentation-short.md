@@ -1,5 +1,9 @@
 # Container Build Pipeline Demo
-## UBI vs RHHI: A Security-First Comparison
+## Three RHEL Deployment Paradigms
+
+<div style="position: absolute; bottom: 20px; right: 20px; font-size: 0.6em; color: #888;">
+Version 1.0 | 2026-06-18
+</div>
 
 ---
 
@@ -7,7 +11,7 @@
 
 1. **What We Built** - Simple task tracker
 2. **Security-First Pipeline** - How we ensure security
-3. **Two Approaches** - UBI vs RHHI comparison
+3. **Three Paradigms** - UBI vs RHHI vs bootc
 4. **Results & Trade-offs** - When to use each
 5. **Live Demo** - See it in action
 6. **Q&A**
@@ -22,17 +26,30 @@
 - **Backend**: PostgreSQL database
 - **Purpose**: CRUD operations (Create/Read/Update/Delete tasks)
 
-**Built TWO ways for comparison:**
-- **UBI** (RHEL Universal Base Images) - Enterprise approach
-- **RHHI** (Red Hat Hummingbird) - Minimal distroless approach
+**Built THREE ways to demonstrate RHEL's deployment ecosystem:**
+- **UBI** (Universal Base Images) - Enterprise containers
+- **RHHI** (Red Hat Hardened Images) - Distroless containers
+- **bootc** (Image Mode) - Bootable OS images
 
-**Why?** To demonstrate security-first build pipelines and compare approaches for different use cases.
+**Why?** To demonstrate security-first pipelines across all three modern RHEL deployment tracks.
 
 ---
 
 ## 📊 System Architecture
 
+<div style="text-align: center;">
+
 ![System Diagram](architecture/system-diagram.png)
+
+</div>
+
+**Three Modern RHEL Deployment Tracks:**
+
+1. **Container-native** - UBI & RHHI (Podman + systemd quadlets)
+2. **Image mode / bootc** - Bootable OS images (immutable infrastructure)
+3. **Traditional RPMs** - Package-based (legacy approach)
+
+**This demo covers tracks 1 & 2 with the same application!**
 
 ---
 
@@ -48,6 +65,26 @@
 6. **📋 SBOM Generation** - Supply chain transparency
 
 **Philosophy**: Security is not optional, it's automated in the build process.
+
+---
+
+## 🔄 Local vs CI/CD: Two Ways to Build
+
+| Feature | 🖥️ Local Pipeline | ☁️ CI/CD Pipeline |
+|---------|-------------------|-------------------|
+| **Execution** | Manual `make ubi` | Auto on git push |
+| **Speed** | ~10 min (local) | ~12 min (GitHub) |
+| **Security Gates** | ✅ Same (npm audit, Trivy, SBOM) | ✅ Same |
+| **Dashboard** | Terminal output | ✅ GitHub Security tab |
+| **Team Visibility** | ❌ Local only | ✅ All team members |
+| **Offline** | ✅ Yes | ❌ Requires internet |
+| **Cost** | Free (local CPU) | GitHub Actions minutes |
+
+**Workflow:**
+- **Local**: Pre-commit → Build → Scan → Deploy → Test (fast iteration)
+- **CI/CD**: Push → Matrix build → Scan → Security tab → Registry push (consistent, automated)
+
+**Best Practice**: Local for development, CI/CD for validation and releases
 
 ---
 
@@ -96,9 +133,9 @@ trivy image --format cyclonedx --output sbom.json
 
 ---
 
-## 🔵 RHHI: Red Hat Hummingbird Images
+## 🔵 RHHI: Red Hat Hardened Images (RHHI)
 
-### What is Hummingbird?
+### What is (RHHI)?
 
 - **Based on**: Fedora (minimal distroless)
 - **Package Manager**: None (distroless)
@@ -121,21 +158,45 @@ trivy image --format cyclonedx --output sbom.json
 
 ---
 
-## 📊 Head-to-Head Comparison
+## 🟣 bootc: Image Mode / Bootable Containers
 
-| **Feature** | **UBI** | **RHHI** |
-|-------------|---------|----------|
-| **Base OS** | RHEL 9 | Fedora |
-| **Web App Size** | 245 MB | **128 MB** ⭐ (48% smaller) |
-| **DB Size** | 401 MB | **144 MB** ⭐ (64% smaller) |
-| **Total Size** | 645 MB | **276 MB** ⭐ (58% smaller) |
-| **Web App CVEs** | 7 | **Minimal** ⭐ |
-| **DB CVEs** | Minimal | **Minimal** ⭐ |
-| **Package Manager** | microdnf ✅ | None ❌ |
-| **Shell Access** | bash ✅ | None ❌ |
-| **Support** | Enterprise ✅ | Community |
-| **Lifecycle** | 10 years ✅ | Rolling |
-| **Best For** | Production, regulated | Microservices, security |
+### What is bootc?
+
+- **Type**: Bootable OS image (not just an app container)
+- **Base**: RHEL 9 Image Mode bootc
+- **Deployment**: Bare metal or VM (boots as the OS)
+- **Use Case**: Appliances, edge devices, immutable infrastructure
+
+### Pros
+
+✅ **Immutable Infrastructure** - OS + app versioned together  
+✅ **Atomic Updates** - Full system upgrade with rollback  
+✅ **Edge Ready** - Single image for remote systems  
+✅ **Appliance Model** - Purpose-built, self-contained systems  
+
+### Cons
+
+⚠️ **Large Size** - ~1-2 GB (full OS, not minimal)  
+⚠️ **Requires Reboot** - Updates need system restart  
+⚠️ **Not Multi-Tenant** - One app per OS instance
+
+---
+
+## 📊 Three-Way Comparison
+
+| **Feature** | **UBI** | **RHHI** | **bootc** |
+|-------------|---------|----------|-----------|
+| **Type** | App container | App container | Bootable OS |
+| **Base OS** | RHEL 9 | Fedora | RHEL 9 Image Mode |
+| **Total Size** | 645 MB | **276 MB** ⭐ | ~1-2 GB |
+| **CVEs** | Moderate | **Minimal** ⭐ | Moderate |
+| **Package Manager** | microdnf ✅ | None | None (immutable) |
+| **Shell Access** | bash ✅ | None | SSH (post-boot) |
+| **Deployment** | Podman | Podman | Bare metal / VM |
+| **Updates** | Pull + restart | Pull + restart | bootc + reboot |
+| **Support** | Enterprise ✅ | Community | Enterprise (RHEL variant) |
+| **Isolation** | Process | Process | Full system |
+| **Best For** | General apps | Microservices | Edge / appliances |
 
 ---
 
@@ -169,8 +230,25 @@ trivy image --format cyclonedx --output sbom.json
 **Perfect for:**
 - Security-critical applications
 - Microservices architecture
-- Edge computing / IoT
+- Cloud-native workloads
 - Bandwidth-constrained environments
+
+---
+
+## 🎯 When to Choose bootc
+
+**Choose bootc when you need:**
+
+✅ **Immutable Infrastructure** - OS + app as single artifact  
+✅ **Edge Deployments** - Remote, single-purpose systems  
+✅ **Appliances** - Kiosks, IoT gateways, embedded systems  
+✅ **Atomic Updates** - Full system rollback capability  
+
+**Perfect for:**
+- Edge computing locations
+- Appliance-style deployments
+- Immutable infrastructure requirements
+- Systems needing OS-level control
 
 ---
 
@@ -178,45 +256,54 @@ trivy image --format cyclonedx --output sbom.json
 
 ### UBI Stack:
 - **Build time**: ~8 minutes (multi-arch)
-- **Web app**: 245 MB, 7 CVEs
-- **Database**: 401 MB, Minimal CVEs
-- **Total**: 645 MB
+- **Total size**: 645 MB (webapp + database)
+- **CVEs**: 7 (webapp), Minimal (database)
 
 ### RHHI Stack:
-- **Build time**: ~8 minutes (multi-arch)
-- **Web app**: 128 MB, Minimal CVEs (distroless)
-- **Database**: 144 MB, Minimal CVEs (distroless)
-- **Total**: 276 MB
+- **Build time**: ~6 minutes (multi-arch)
+- **Total size**: 276 MB (58% smaller! ⭐)
+- **CVEs**: Minimal (distroless)
 
-**Improvement**: 58% smaller, minimal attack surface!
+### bootc Image:
+- **Build time**: ~11 minutes (AMD64)
+- **Total size**: ~1-2 GB (full OS + app)
+- **CVEs**: Moderate (full OS)
+
+**Key insight**: Choose based on deployment model, not just size!
 
 ---
 
 ## 🚀 Live Demo
 
-**Demo deployed to kvm151:**
+**Live Dashboard: http://localhost:8888**
 
-**RHHI Stack:**
-- Access: http://192.168.1.151:3001/health
-- Status: ✅ Running with database connected
+Watch all three paradigms build in parallel!
 
-**Let's look at:**
-1. Health check endpoint
-2. CRUD operations (Create/Read/Update tasks)
-3. Container sizes vs traditional images
-4. Security scan results
+**What you'll see:**
+1. **UBI** - Traditional enterprise containers
+2. **RHHI** - Distroless security-hardened containers
+3. **bootc** - Bootable OS image
+
+**Real-time updates:**
+- Build progress (init → build → scan)
+- Live log streaming
+- Duration tracking
+- Success/failure status
+
+**One command:** `make demo`
 
 ---
 
 ## 💡 Key Takeaways
 
-1. **Security First** - Automated gates catch issues before deployment
-2. **Not Either/Or** - Use the right tool for the job
-3. **Size Matters** - 58% reduction with RHHI enables new use cases
-4. **Trade-offs** - Debuggability vs security, support vs flexibility
-5. **Multi-arch** - Same code, both AMD64 and ARM64
+1. **Three Paradigms** - UBI (enterprise), RHHI (distroless), bootc (immutable OS)
+2. **Security First** - Same security pipeline for all three tracks
+3. **Right Tool for Job** - Containers for apps, bootc for appliances
+4. **Size vs Scope** - RHHI smallest (276 MB), bootc largest (~2 GB) but includes OS
+5. **Multi-arch** - UBI and RHHI support AMD64 + ARM64
+6. **Live Dashboard** - Parallel builds with real-time progress
 
-**The Future**: Mix and match based on workload needs, not one-size-fits-all
+**The Future**: Red Hat's multi-modal deployment ecosystem - choose what fits!
 
 ---
 
@@ -236,8 +323,10 @@ trivy image --format cyclonedx --output sbom.json
 ```bash
 git clone https://github.com/jkirklan/homelab.git
 cd homelab/demo/
-make ubi    # Build UBI stack
-make rhhi   # Build RHHI stack
+make ubi     # Build UBI stack
+make rhhi    # Build RHHI stack
+make bootc   # Build bootc image
+make demo    # Live dashboard + parallel builds
 ```
 
 ---

@@ -1,20 +1,18 @@
 # Container Build Pipeline Demo: UBI vs RHHI vs Bootc
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Podman](https://img.shields.io/badge/Podman-892CA0?logo=podman&logoColor=white)](https://podman.io/)
-[![Node.js](https://img.shields.io/badge/Node.js-20-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15%20%7C%2017-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![Security: Trivy](https://img.shields.io/badge/Security-Trivy-1904DA?logo=aqua&logoColor=white)](https://trivy.dev/)
-[![SBOM: CycloneDX](https://img.shields.io/badge/SBOM-CycloneDX-00ADD8)](https://cyclonedx.org/)
+**Version:** 1.1 (2026-06-18)
 
-A comprehensive demonstration of security-first container build and deployment pipelines using three approaches:
-- **UBI** (RHEL Universal Base Images) - Enterprise-grade, flexible, traditional containers
-- **RHHI** (Red Hat Hummingbird Images) - Ultra-minimal distroless containers
-- **Bootc** (Bootable Containers) - Immutable OS images with built-in application
+A comprehensive demonstration of security-first container build and deployment pipelines using **four** approaches:
+- **UBI containers** (RHEL Universal Base Images) - Enterprise-grade, flexible, traditional containers
+- **RHHI containers** (Red Hat Hardened Images) - Ultra-minimal distroless containers
+- **UBI bootc** (Bootable Containers) - Immutable OS images with built-in application (RHEL-based)
+- **RHHI bootc** (Red Hat Hardened Images Bootable OS) - Minimal immutable OS (Fedora-based)
 
 ## 📋 What's Inside
 
 This demo showcases:
+- ✅ **Four deployment paradigms** - UBI, RHHI, UBI bootc, RHHI bootc in parallel
+- ✅ **Live dashboard** - Real-time build/scan progress visualization
 - ✅ **Multi-stage container builds** with npm audit security scanning
 - ✅ **Trivy vulnerability scanning** + SBOM generation
 - ✅ **Multi-architecture support** (AMD64 + ARM64)
@@ -22,6 +20,30 @@ This demo showcases:
 - ✅ **Traefik reverse proxy** with TLS termination
 - ✅ **FreeIPA DNS** integration
 - ✅ **Secret management** with Podman secrets
+
+## 🎯 Live Demo Dashboard
+
+**NEW:** Real-time web dashboard for presentations showing all four tracks building in parallel.
+
+```bash
+# Start dashboard + parallel builds
+make demo
+
+# Or start just the dashboard
+make dashboard
+```
+
+**Dashboard URL:** http://localhost:8889
+
+**Features:**
+- Real-time status updates (Server-Sent Events)
+- 2x2 grid layout (UBI, RHHI, UBI bootc, RHHI bootc)
+- Live log streaming
+- Build phase tracking
+- Duration measurement
+- Error display
+
+See `dashboard/README.md` for details.
 
 ## 🏗️ Architecture
 
@@ -35,18 +57,18 @@ This demo showcases:
 
 ### Three Deployment Paradigms
 
-| Component | UBI (Container) | RHHI (Distroless) | Bootc (OS Image) |
+| Component | UBI (Container) | RHHI (distroless) | Bootc (OS Image) |
 |-----------|----------------|-------------------|------------------|
 | **Type** | Application container | Application container | Bootable OS image |
-| **Base** | ubi9/nodejs-20-minimal | hi/nodejs:20 (distroless) | rhel9/rhel-bootc + Hummingbird |
+| **Base** | ubi9/nodejs-20-minimal | hi/nodejs:20 (distroless) | centos-bootc:stream9 |
 | **Total Size** | 645 MB | **276 MB** (58% smaller) | ~1-2 GB (full OS) |
 | **Package Manager** | microdnf ✅ | None (distroless) | dnf (build only) |
 | **Shell Access** | bash ✅ | None (distroless) | SSH (post-boot) |
 | **Runtime** | Podman | Podman | Systemd (native boot) |
 | **Updates** | Pull + restart | Pull + restart | bootc upgrade + reboot |
 | **Isolation** | Namespace/cgroup | Namespace/cgroup | Full system |
-| **Support** | Red Hat Enterprise | Community (Hummingbird) | Red Hat Enterprise (RHEL) |
-| **Lifecycle** | 10 years | Rolling (Fedora) | 10 years (RHEL) |
+| **Support** | Red Hat Enterprise | Community | Community (RHEL variant available) |
+| **Lifecycle** | 10 years | Rolling (Fedora) | Rolling (CentOS Stream) |
 | **Use Case** | General apps | Security-first apps | Appliances, immutable infra |
 
 ## 📁 Directory Structure
@@ -182,25 +204,20 @@ Deployment includes:
 
 **Manual testing:**
 ```bash
-# UBI stack (port 3001)
+# UBI stack (port 3000)
+curl http://localhost:3000/health
+curl http://localhost:3000/api/tasks
+
+# RHHI stack (port 3001)
 curl http://localhost:3001/health
 curl http://localhost:3001/api/tasks
-
-# RHHI stack (port 3002)
-curl http://localhost:3002/health
-curl http://localhost:3002/api/tasks
-
-# bootc (port 3003, when deployed locally)
-curl http://localhost:3003/health
-curl http://localhost:3003/api/tasks
 ```
 
 **4. Access Web UI:**
 
 **Locally:**
-- UBI: http://localhost:3001
-- RHHI: http://localhost:3002
-- bootc: http://localhost:3003 (when deployed locally)
+- UBI: http://localhost:3000
+- RHHI: http://localhost:3001
 
 **Via Traefik (after DNS setup):**
 - UBI: https://demo-ubi.lab.kubelet.org
@@ -291,7 +308,6 @@ echo -n "password" | podman secret create demo-postgres-password -
 
 **Health checks:**
 ```ini
-# Note: Internal container port is 3000, published port varies (3001/3002/3003)
 HealthCmd=curl -f http://localhost:3000/health || exit 1
 HealthInterval=30s
 ```
@@ -384,247 +400,17 @@ Network=demo-net
 - Smaller image sizes
 - Modern stack
 
-### When to Use Bootc (Image Mode)
-
-✅ **Immutable Infrastructure**
-- OS + application versioned together
-- Atomic updates with rollback capability
-- Reproducible system state
-
-✅ **Edge Deployments**
-- Single image for remote systems
-- Reduced operational complexity
-- Offline-first design
-
-✅ **Appliance Model**
-- Purpose-built systems (kiosks, IoT)
-- Minimal runtime changes
-- Security through immutability
-
-✅ **Regulatory Compliance**
-- Full system audit trail
-- No runtime package changes
-- Verifiable configuration
-
-### This Demo: Why All Three?
+### This Demo: Why Both?
 
 **Educational Value:**
-- Shows three valid deployment paradigms
-- Demonstrates security vs flexibility trade-offs
+- Shows two valid approaches
+- Demonstrates trade-offs
 - Highlights decision criteria
 
 **Real-World Comparison:**
-- Same application, different approaches
+- Same application, different bases
 - Apples-to-apples metrics
 - Side-by-side deployment
-
-
-## 🚀 Bootc / Image Mode: The Third Track
-
-### What is Bootc/Image Mode?
-
-**Bootc** (Bootable Containers) represents a fundamentally different paradigm from traditional application containers. Instead of packaging just your application, you package the **entire operating system** as a container image.
-
-**Key Concept**: The container image **IS** the operating system - it boots directly without needing a separate host OS.
-
-### Architecture Comparison
-
-```
-Traditional Containers (UBI/RHHI):
-┌─────────────────────────────┐
-│   Application Container     │
-│   (Your App + Dependencies) │
-└─────────────────────────────┘
-            ↓
-┌─────────────────────────────┐
-│   Container Runtime         │
-│   (Podman, Docker)          │
-└─────────────────────────────┘
-            ↓
-┌─────────────────────────────┐
-│   Host Operating System     │
-│   (RHEL, Fedora, Ubuntu)    │
-└─────────────────────────────┘
-            ↓
-┌─────────────────────────────┐
-│   Hardware / Hypervisor     │
-└─────────────────────────────┘
-
-Bootc / Image Mode:
-┌─────────────────────────────┐
-│   Bootable Container Image  │
-│   ┌─────────────────────┐   │
-│   │ Your Application    │   │
-│   ├─────────────────────┤   │
-│   │ Full OS (RHEL 9)    │   │
-│   │ + Kernel + Systemd  │   │
-│   └─────────────────────┘   │
-└─────────────────────────────┘
-            ↓
-┌─────────────────────────────┐
-│   Hardware / Hypervisor     │
-└─────────────────────────────┘
-```
-
-### RHEL Image Mode + Hummingbird
-
-This demo uses **RHEL Image Mode bootc** with **Hummingbird packages** for the best of both worlds:
-
-| Component | Description | Benefit |
-|-----------|-------------|---------|
-| **RHEL bootc base** | `registry.redhat.io/rhel9/rhel-bootc:latest` | Enterprise OS, 10-year lifecycle, Red Hat support |
-| **Hummingbird packages** | `https://packages.redhat.com/api/pulp-content/public-hummingbird/` | Minimal attack surface, security-hardened |
-| **Systemd services** | postgres-init, postgresql, webapp | Application runs as native system services |
-| **Immutable root** | Read-only filesystem | Security through immutability |
-| **Atomic updates** | `bootc upgrade` + reboot | Rollback capability, no partial updates |
-
-### Deployment Options
-
-Bootc images can be deployed in **three different ways**:
-
-#### 1. As a Virtual Machine
-```bash
-# Convert to VM disk image
-podman run --rm --privileged \
-  -v ./output:/output \
-  quay.io/centos-bootc/bootc-image-builder:latest \
-  --type qcow2 \
-  demo-bootc-rhel:latest
-
-# Boot with libvirt/QEMU
-virt-install --import --disk ./output/disk.qcow2 --os-variant rhel9.0
-```
-
-#### 2. As a Container (with systemd)
-```bash
-# Run bootc image as a container (for testing)
-podman run -d --name demo-bootc \
-  --privileged \
-  --cgroupns=host \
-  -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
-  demo-bootc-rhel:latest /sbin/init
-```
-
-#### 3. On Bare Metal
-```bash
-# Install to physical disk
-bootc install to-disk --image demo-bootc-rhel:latest /dev/sda
-
-# Existing bootc system: switch to new image
-bootc switch demo-bootc-rhel:latest
-systemctl reboot
-```
-
-### Update Workflow
-
-**Traditional containers**: Pull new image, stop old, start new
-**Bootc/Image Mode**: Atomic OS upgrade + reboot
-
-```bash
-# Check for updates
-bootc upgrade --check
-
-# Upgrade to new image version
-bootc upgrade
-
-# Reboot into new version
-systemctl reboot
-
-# Rollback if needed (previous version is kept)
-bootc rollback
-systemctl reboot
-```
-
-### When Bootc Makes Sense
-
-| Use Case | Why Bootc? |
-|----------|------------|
-| **Edge Computing** | Single image, offline-first, reduced ops complexity |
-| **Kiosks/Appliances** | Immutable, purpose-built, minimal maintenance |
-| **Regulated Industries** | Full system audit trail, verifiable state |
-| **Multi-site Deployments** | Same image everywhere, no config drift |
-| **Air-gapped Systems** | Complete OS + app in one artifact |
-
-### When Bootc Doesn't Make Sense
-
-| Scenario | Why Not? |
-|----------|----------|
-| **Multi-tenant platforms** | Each app needs its own OS (wasteful) |
-| **Microservices** | Too heavyweight per service (1-2 GB vs 100-200 MB) |
-| **Rapid development** | Full OS rebuild for every change (slow iteration) |
-| **Shared infrastructure** | Can't run multiple apps on same system |
-
-### Security Benefits
-
-**Immutability**:
-- Root filesystem is read-only at runtime
-- No `dnf install` or package modifications possible
-- Changes require new image + reboot
-
-**Atomic Updates**:
-- Either fully updated or fully rolled back
-- No partial/broken states
-- Previous version always available
-
-**Minimal Attack Surface**:
-- Hummingbird packages reduce installed software
-- No package manager at runtime
-- Systemd-only services (no arbitrary processes)
-
-**Full System Verification**:
-- OS + application versioned together
-- Image signature verification
-- Supply chain transparency via SBOM
-
-### Production Considerations
-
-**For production bootc deployments:**
-
-- [ ] **Authentication**: Replace hardcoded passwords with Podman secrets or Vault
-- [ ] **Firewall**: Configure firewalld rules at build time
-- [ ] **SSH hardening**: Disable password auth, keys only
-- [ ] **Monitoring**: Configure node_exporter or similar for metrics
-- [ ] **Logging**: Forward logs to centralized system (rsyslog, journald forwarding)
-- [ ] **Backups**: Database backup strategy (pgBackRest, Barman)
-- [ ] **Disaster recovery**: Document restore procedures
-- [ ] **Red Hat subscription**: Register system for updates and support
-
-### Building RHEL Image Mode Bootc
-
-**Requirements:**
-- Red Hat subscription (for `registry.redhat.io/rhel9/rhel-bootc:latest`)
-- Or use public alternatives (CentOS Stream bootc, Fedora CoreOS)
-
-**Build command:**
-```bash
-cd bootc
-podman build --platform linux/amd64 -t demo-bootc-rhel:latest -f Containerfile ..
-```
-
-**Authentication (RHEL base):**
-```bash
-# Login to Red Hat registry
-podman login registry.redhat.io
-# Enter Customer Portal credentials
-```
-
-**Alternative (no subscription required):**
-Change `FROM` line in `bootc/Containerfile`:
-```dockerfile
-# RHEL Image Mode (requires subscription)
-FROM registry.redhat.io/rhel9/rhel-bootc:latest
-
-# CentOS Stream (public, no auth required)
-FROM quay.io/centos-bootc/centos-bootc:stream9
-```
-
-### Learn More
-
-- **RHEL Image Mode**: https://developers.redhat.com/articles/rhel-image-mode
-- **Bootc project**: https://github.com/containers/bootc
-- **Hummingbird packages**: https://packages.redhat.com/api/pulp-content/public-hummingbird/
-- **Bootc image builder**: https://github.com/osbuild/bootc-image-builder
-- **Demo bootc README**: [bootc/README.md](bootc/README.md)
 
 ## 🧪 Testing the Demo
 
@@ -645,33 +431,26 @@ Tests run:
 
 **Create a task:**
 ```bash
-# UBI (port 3001)
-curl -X POST http://localhost:3001/api/tasks \
-  -H "Content-Type: application/json" \
-  -d '{"title":"Demo Task","description":"Testing the API"}'
-
-# RHHI (port 3002)
-curl -X POST http://localhost:3002/api/tasks \
+curl -X POST http://localhost:3000/api/tasks \
   -H "Content-Type: application/json" \
   -d '{"title":"Demo Task","description":"Testing the API"}'
 ```
 
 **List tasks:**
 ```bash
-curl http://localhost:3001/api/tasks | jq  # UBI
-curl http://localhost:3002/api/tasks | jq  # RHHI
+curl http://localhost:3000/api/tasks | jq
 ```
 
 **Update task:**
 ```bash
-curl -X PUT http://localhost:3001/api/tasks/1 \
+curl -X PUT http://localhost:3000/api/tasks/1 \
   -H "Content-Type: application/json" \
   -d '{"completed":true}'
 ```
 
 **Delete task:**
 ```bash
-curl -X DELETE http://localhost:3001/api/tasks/1
+curl -X DELETE http://localhost:3000/api/tasks/1
 ```
 
 ### Database Testing
@@ -740,7 +519,7 @@ podman exec -it demo-webapp-rhhi bash
 podman run --rm -it --network container:demo-webapp-rhhi \
   registry.access.redhat.com/ubi9/ubi-minimal bash
 
-# Inside sidecar (uses container's internal port 3000):
+# Inside sidecar:
 curl http://localhost:3000/health
 ```
 
@@ -795,8 +574,8 @@ podman logs demo-webapp-rhhi -f
 - `slides/demo-presentation.md` - Complete slide deck (reveal.js compatible)
 
 ### External Resources
-- [Hummingbird Catalog](https://catalog.hummingbird-project.io)
-- [Hummingbird API](https://api-hummingbird.hummingbird-project.io/v1/docs/)
+- [Red Hat Hardened Images Catalog](https://catalog.hummingbird-project.io)
+- [Red Hat Hardened Images API](https://api-hummingbird.hummingbird-project.io/v1/docs/)
 - [Red Hat UBI Catalog](https://catalog.redhat.com/software/base-images)
 - [Container Security Scanning Guide](../docs/02-guides/container-security-scanning.md)
 
@@ -827,6 +606,38 @@ podman rmi ghcr.io/jkirklan/demo-webapp-rhhi:latest
 podman rmi ghcr.io/jkirklan/demo-db-rhhi:latest
 ```
 
+## 📄 Generate PDF Presentation
+
+Create a PDF version of the slide deck for offline viewing or distribution:
+
+**Method 1: Browser Print-to-PDF (Recommended)**
+
+1. Start the presentation server:
+   ```bash
+   cd slides
+   python3 -m http.server 8888
+   ```
+
+2. Open in browser with print mode: http://localhost:8888/?print-pdf
+
+3. Press **Cmd+P** (Mac) or **Ctrl+P** (Windows/Linux)
+
+4. Select **"Save as PDF"** as destination
+
+5. Enable **"Background graphics"** in print options
+
+6. Save as `demo-presentation.pdf`
+
+**Method 2: Using decktape (requires Chrome)**
+
+```bash
+cd slides
+npm install -g decktape
+decktape reveal http://localhost:8888/ demo-presentation.pdf --size 1920x1080
+```
+
+See `slides/generate-pdf-instructions.md` for detailed steps.
+
 ## 🤝 Contributing
 
 This is a demonstration environment. To adapt for your own use:
@@ -845,13 +656,13 @@ Part of the homelab repository. See root LICENSE file.
 
 For questions or issues:
 - **Homelab Issues**: github.com/jkirklan/homelab/issues
-- **Hummingbird**: https://gitlab.com/redhat/hummingbird/containers/-/issues
+- **RHHI**: https://gitlab.com/redhat/hummingbird/containers/-/issues
 - **UBI**: Red Hat support portal
 
 ## ✨ Credits
 
 - **UBI**: Red Hat Universal Base Images team
-- **Hummingbird**: Red Hat Hummingbird Project
+- **RHHI**: Red Hat Red Hat Hardened Images
 - **Homelab**: Built with security-first principles
 
 ---

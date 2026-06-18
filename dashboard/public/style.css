@@ -28,12 +28,41 @@ header h1 {
   opacity: 0.9;
 }
 
+.version {
+  font-size: 0.9rem;
+  opacity: 0.7;
+  margin-top: 5px;
+}
+
 .dashboard {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: auto auto;
   gap: 20px;
-  max-width: 1400px;
+  max-width: 1800px;
   margin: 0 auto;
+}
+
+/* Force 2x2 grid layout - two rows, two columns each */
+.dashboard .track:nth-child(1),
+.dashboard .track:nth-child(2) {
+  grid-row: 1;
+}
+
+.dashboard .track:nth-child(3),
+.dashboard .track:nth-child(4) {
+  grid-row: 2;
+}
+
+@media (max-width: 1200px) {
+  .dashboard {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+
+  .dashboard .track {
+    grid-row: auto !important;
+  }
 }
 
 .track {
@@ -145,6 +174,55 @@ header h1 {
   display: block;
 }
 
+.demo-actions {
+  margin-top: 15px;
+  text-align: center;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.start-btn {
+  display: inline-block;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.start-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.start-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.demo-btn {
+  display: inline-block;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.demo-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
 .log-section {
   padding: 20px;
 }
@@ -179,9 +257,9 @@ header h1 {
   padding: 15px;
   border-radius: 8px;
   font-family: 'Courier New', monospace;
-  font-size: 0.8rem;
-  line-height: 1.5;
-  max-height: 300px;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  max-height: 200px;
   overflow-y: auto;
   white-space: pre-wrap;
   word-wrap: break-word;
