@@ -117,7 +117,7 @@ build_variant() {
   # Complete with statistics
   update_status "$variant" "completed" "scan"
   echo "" | tee -a "$log_file"
-  echo "✅ $variant variant completed!" | tee -a "$log_file"
+  echo "✅ $variant variant completed at $(date '+%Y-%m-%d %H:%M:%S %Z')" | tee -a "$log_file"
   echo "📊 Total time: ${total_min}m ${total_sec}s | CVEs: $cve_count HIGH/CRITICAL" | tee -a "$log_file"
   echo "" | tee -a "$log_file"
   return 0
