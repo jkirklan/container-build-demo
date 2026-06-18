@@ -112,7 +112,11 @@ demo:
 	@echo "Starting dashboard in background..."
 	cd dashboard && npm install && node server.js > /dev/null 2>&1 &
 	@sleep 2
-	@echo "Dashboard: http://localhost:8889"
+	@if [ "$$(hostname -s)" = "kvm152" ]; then \
+		echo "Dashboard: http://kvm152.lab.kubelet.org:8889"; \
+	else \
+		echo "Dashboard: http://localhost:8889"; \
+	fi
 	@echo ""
 	@echo "Building all variants in parallel..."
 	./scripts/build-demo-parallel.sh
