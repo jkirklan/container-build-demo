@@ -100,17 +100,19 @@ build_variant() {
     local component_name="${variant/bootc-/bootc-}"  # bootc or bootc-rhhi
     local sbom_file="$DEMO_DIR/sboms/demo-${component_name}-${component_name}-$(date +%Y%m%d).json"
     cve_count=$(grep -c "HIGH\|CRITICAL" "$sbom_file" 2>/dev/null || echo "0")
-    # Remove leading zeros for arithmetic
-    cve_count=$((10#$cve_count))
+    # Remove leading zeros (handle 00, 01, etc from grep -c)
+    cve_count=${cve_count#0}  # Strip one leading zero
+    cve_count=${cve_count#0}  # Strip another if present
+    cve_count=${cve_count:-0} # Default to 0 if empty
   else
     # Container variants have webapp + db
     local webapp_sbom="$DEMO_DIR/sboms/demo-webapp-${variant}-$(date +%Y%m%d).json"
     local db_sbom="$DEMO_DIR/sboms/demo-db-${variant}-$(date +%Y%m%d).json"
     local webapp_cves=$(grep -c "HIGH\|CRITICAL" "$webapp_sbom" 2>/dev/null || echo "0")
     local db_cves=$(grep -c "HIGH\|CRITICAL" "$db_sbom" 2>/dev/null || echo "0")
-    # Remove leading zeros for arithmetic
-    webapp_cves=$((10#$webapp_cves))
-    db_cves=$((10#$db_cves))
+    # Remove leading zeros (handle 00, 01, etc from grep -c)
+    webapp_cves=${webapp_cves#0}; webapp_cves=${webapp_cves#0}; webapp_cves=${webapp_cves:-0}
+    db_cves=${db_cves#0}; db_cves=${db_cves#0}; db_cves=${db_cves:-0}
     cve_count=$((webapp_cves + db_cves))
   fi
 
@@ -198,16 +200,16 @@ for variant in ubi rhhi bootc bootc-rhhi; do
     component_name="${variant/bootc-/bootc-}"
     sbom_file="$DEMO_DIR/sboms/demo-${component_name}-${component_name}-$(date +%Y%m%d).json"
     cve_count=$(grep -c "HIGH\|CRITICAL" "$sbom_file" 2>/dev/null || echo "0")
-    # Remove leading zeros for arithmetic
-    cve_count=$((10#$cve_count))
+    # Remove leading zeros (handle 00, 01, etc from grep -c)
+    cve_count=${cve_count#0}; cve_count=${cve_count#0}; cve_count=${cve_count:-0}
   else
     webapp_sbom="$DEMO_DIR/sboms/demo-webapp-${variant}-$(date +%Y%m%d).json"
     db_sbom="$DEMO_DIR/sboms/demo-db-${variant}-$(date +%Y%m%d).json"
     webapp_cves=$(grep -c "HIGH\|CRITICAL" "$webapp_sbom" 2>/dev/null || echo "0")
     db_cves=$(grep -c "HIGH\|CRITICAL" "$db_sbom" 2>/dev/null || echo "0")
-    # Remove leading zeros for arithmetic
-    webapp_cves=$((10#$webapp_cves))
-    db_cves=$((10#$db_cves))
+    # Remove leading zeros (handle 00, 01, etc from grep -c)
+    webapp_cves=${webapp_cves#0}; webapp_cves=${webapp_cves#0}; webapp_cves=${webapp_cves:-0}
+    db_cves=${db_cves#0}; db_cves=${db_cves#0}; db_cves=${db_cves:-0}
     cve_count=$((webapp_cves + db_cves))
   fi
 
