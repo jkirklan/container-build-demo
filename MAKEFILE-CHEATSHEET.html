@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Makefile Cheatsheet</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+            line-height: 1.6;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+        pre {
+            background-color: #f6f8fa;
+            padding: 16px;
+            border-radius: 6px;
+            overflow-x: auto;
+        }
+        pre code {
+            background-color: transparent;
+            padding: 0;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            margin-top: 24px;
+            margin-bottom: 16px;
+            font-weight: 600;
+            line-height: 1.25;
+        }
+        h1 { font-size: 2em; border-bottom: 1px solid #eaecef; padding-bottom: 0.3em; }
+        h2 { font-size: 1.5em; border-bottom: 1px solid #eaecef; padding-bottom: 0.3em; }
+        h3 { font-size: 1.25em; }
+        blockquote {
+            border-left: 4px solid #ddd;
+            padding-left: 16px;
+            color: #666;
+            margin: 16px 0;
+        }
+        a { color: #0366d6; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        #TOC {
+            background-color: #f6f8fa;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 30px;
+        }
+        #TOC ul {
+            list-style-type: none;
+            padding-left: 20px;
+        }
+        #TOC > ul {
+            padding-left: 0;
+        }
+        #TOC a {
+            color: #24292e;
+        }
+        .mermaid {
+            text-align: center;
+            margin: 20px 0;
+            background-color: white;
+            padding: 20px;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+        }
+        @media print {
+            body { max-width: 100%; margin: 0; }
+            #TOC { page-break-after: always; }
+        }
+    </style>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            securityLevel: 'loose'
+        });
+    </script>
+    </head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Makefile Cheatsheet</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#container-build-demo---makefile-cheatsheet"
+id="toc-container-build-demo---makefile-cheatsheet"><span
+class="toc-section-number">1</span> Container Build Demo - Makefile
+Cheatsheet</a>
+<ul>
+<li><a href="#quick-start" id="toc-quick-start"><span
+class="toc-section-number">1.1</span> Quick Start</a></li>
+<li><a href="#build-commands" id="toc-build-commands"><span
+class="toc-section-number">1.2</span> Build Commands</a></li>
+<li><a href="#security-scanning" id="toc-security-scanning"><span
+class="toc-section-number">1.3</span> Security Scanning</a></li>
+<li><a href="#deployment" id="toc-deployment"><span
+class="toc-section-number">1.4</span> Deployment</a></li>
+<li><a href="#testing" id="toc-testing"><span
+class="toc-section-number">1.5</span> Testing</a></li>
+<li><a href="#full-pipelines" id="toc-full-pipelines"><span
+class="toc-section-number">1.6</span> Full Pipelines</a></li>
+<li><a href="#live-demo-dashboard" id="toc-live-demo-dashboard"><span
+class="toc-section-number">1.7</span> Live Demo Dashboard</a></li>
+<li><a href="#cleanup" id="toc-cleanup"><span
+class="toc-section-number">1.8</span> Cleanup</a></li>
+<li><a href="#port-reference" id="toc-port-reference"><span
+class="toc-section-number">1.9</span> Port Reference</a></li>
+<li><a href="#image-naming" id="toc-image-naming"><span
+class="toc-section-number">1.10</span> Image Naming</a></li>
+<li><a href="#common-workflows" id="toc-common-workflows"><span
+class="toc-section-number">1.11</span> Common Workflows</a>
+<ul>
+<li><a href="#development-iteration"
+id="toc-development-iteration"><span
+class="toc-section-number">1.11.1</span> Development Iteration</a></li>
+<li><a href="#pre-presentation-check"
+id="toc-pre-presentation-check"><span
+class="toc-section-number">1.11.2</span> Pre-Presentation Check</a></li>
+<li><a href="#security-audit" id="toc-security-audit"><span
+class="toc-section-number">1.11.3</span> Security Audit</a></li>
+<li><a href="#clean-start" id="toc-clean-start"><span
+class="toc-section-number">1.11.4</span> Clean Start</a></li>
+</ul></li>
+<li><a href="#troubleshooting" id="toc-troubleshooting"><span
+class="toc-section-number">1.12</span> Troubleshooting</a>
+<ul>
+<li><a href="#tests-failing" id="toc-tests-failing"><span
+class="toc-section-number">1.12.1</span> Tests Failing</a></li>
+<li><a href="#build-failures" id="toc-build-failures"><span
+class="toc-section-number">1.12.2</span> Build Failures</a></li>
+<li><a href="#port-conflicts" id="toc-port-conflicts"><span
+class="toc-section-number">1.12.3</span> Port Conflicts</a></li>
+</ul></li>
+<li><a href="#help" id="toc-help"><span
+class="toc-section-number">1.13</span> Help</a></li>
+<li><a href="#files-generated" id="toc-files-generated"><span
+class="toc-section-number">1.14</span> Files Generated</a></li>
+<li><a href="#cross-platform-notes" id="toc-cross-platform-notes"><span
+class="toc-section-number">1.15</span> Cross-Platform Notes</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 data-number="1"
+id="container-build-demo---makefile-cheatsheet"><span
+class="header-section-number">1</span> Container Build Demo - Makefile
+Cheatsheet</h1>
+<p>Quick reference for all <code>make</code> commands in the three-track
+container demo.</p>
+<h2 data-number="1.1" id="quick-start"><span
+class="header-section-number">1.1</span> Quick Start</h2>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Full pipeline: Build + Scan + Deploy + Test</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> ubi              <span class="co"># UBI track (RHEL-based)</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> rhhi             <span class="co"># RHHI track (distroless)</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> bootc            <span class="co"># bootc track (image mode)</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> all              <span class="co"># All three tracks</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Live demo with dashboard</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> demo             <span class="co"># Start dashboard + build all in parallel</span></span></code></pre></div>
+<h2 data-number="1.2" id="build-commands"><span
+class="header-section-number">1.2</span> Build Commands</h2>
+<p>Build container images with multi-architecture support (AMD64 +
+ARM64).</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> build-ubi        <span class="co"># Build UBI images (webapp + db)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> build-rhhi       <span class="co"># Build RHHI images (webapp + db)</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> build-bootc      <span class="co"># Build bootc image</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> build-all        <span class="co"># Build all three variants sequentially</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> build-parallel   <span class="co"># Build all in parallel (for live demos)</span></span></code></pre></div>
+<p><strong>When to use:</strong> - <code>build-ubi</code> /
+<code>build-rhhi</code> / <code>build-bootc</code> - Individual track
+development - <code>build-all</code> - CI/CD pipelines (sequential,
+easier to debug) - <code>build-parallel</code> - Live presentations
+(concurrent, faster)</p>
+<h2 data-number="1.3" id="security-scanning"><span
+class="header-section-number">1.3</span> Security Scanning</h2>
+<p>Scan images for vulnerabilities and generate SBOMs.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> scan-ubi         <span class="co"># Trivy scan + SBOM for UBI images</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> scan-rhhi        <span class="co"># Trivy scan + SBOM for RHHI images</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> scan-bootc       <span class="co"># Trivy scan + SBOM for bootc image</span></span></code></pre></div>
+<p><strong>Output:</strong> - Vulnerability report (HIGH/CRITICAL CVEs)
+- SBOM in <code>sboms/</code> directory (CycloneDX format)</p>
+<p><strong>When to use:</strong> - After building images - Before
+deployment - Supply chain security audits</p>
+<h2 data-number="1.4" id="deployment"><span
+class="header-section-number">1.4</span> Deployment</h2>
+<p>Deploy to local Podman (macOS or Linux).</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> deploy-ubi       <span class="co"># Deploy UBI stack (db + webapp)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> deploy-rhhi      <span class="co"># Deploy RHHI stack (db + webapp)</span></span></code></pre></div>
+<p><strong>Behavior:</strong> - <strong>macOS</strong>: Uses
+<code>podman run</code> directly (no systemd) - <strong>Linux</strong>:
+Uses systemd quadlets</p>
+<p><strong>Ports:</strong> - UBI webapp:
+<code>http://localhost:3001</code> - RHHI webapp:
+<code>http://localhost:3002</code> - bootc:
+<code>http://localhost:3003</code> (when deployed locally)</p>
+<h2 data-number="1.5" id="testing"><span
+class="header-section-number">1.5</span> Testing</h2>
+<p>Run smoke tests against deployed stacks.</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> test-ubi         <span class="co"># Test UBI stack (5 tests)</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> test-rhhi        <span class="co"># Test RHHI stack (5 tests)</span></span></code></pre></div>
+<p><strong>Tests:</strong> 1. ✅ Health check (<code>/health</code>) 2.
+✅ List tasks (<code>GET /api/tasks</code>) 3. ✅ Create task
+(<code>POST /api/tasks</code>) 4. ✅ Update task
+(<code>PUT /api/tasks/:id</code>) 5. ✅ Delete task
+(<code>DELETE /api/tasks/:id</code>)</p>
+<h2 data-number="1.6" id="full-pipelines"><span
+class="header-section-number">1.6</span> Full Pipelines</h2>
+<p>Complete workflows from build to test.</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> ubi              <span class="co"># Build → Scan → Deploy → Test (UBI)</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> rhhi             <span class="co"># Build → Scan → Deploy → Test (RHHI)</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> bootc            <span class="co"># Build → Scan (bootc, no local deploy)</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> all              <span class="co"># All three pipelines</span></span></code></pre></div>
+<p><strong>Use case:</strong> Full validation before pushing images to
+registry.</p>
+<h2 data-number="1.7" id="live-demo-dashboard"><span
+class="header-section-number">1.7</span> Live Demo Dashboard</h2>
+<p>Start interactive dashboard for presentations.</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> dashboard        <span class="co"># Start dashboard server on port 8888</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> demo             <span class="co"># Dashboard + parallel builds</span></span></code></pre></div>
+<p><strong>Dashboard features:</strong> - Real-time build progress (SSE
+updates) - Three-track comparison - Vulnerability counts - Image
+sizes</p>
+<p><strong>Access:</strong> <code>http://localhost:8888</code></p>
+<h2 data-number="1.8" id="cleanup"><span
+class="header-section-number">1.8</span> Cleanup</h2>
+<p>Remove demo containers and data.</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> clean            <span class="co"># Stop containers, remove data</span></span></code></pre></div>
+<p><strong>Warning:</strong> Deletes all demo containers and persistent
+data!</p>
+<h2 data-number="1.9" id="port-reference"><span
+class="header-section-number">1.9</span> Port Reference</h2>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Port</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UBI webapp</td>
+<td>3001</td>
+<td>Task tracker (UBI)</td>
+</tr>
+<tr>
+<td>UBI database</td>
+<td>5432</td>
+<td>PostgreSQL (UBI)</td>
+</tr>
+<tr>
+<td>RHHI webapp</td>
+<td>3002</td>
+<td>Task tracker (RHHI)</td>
+</tr>
+<tr>
+<td>RHHI database</td>
+<td>5433</td>
+<td>PostgreSQL (RHHI)</td>
+</tr>
+<tr>
+<td>bootc webapp</td>
+<td>3003</td>
+<td>Task tracker (bootc, reserved)</td>
+</tr>
+<tr>
+<td>Dashboard</td>
+<td>8888</td>
+<td>Live demo dashboard</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note:</strong> Port 3000 is intentionally avoided (conflicts
+with common dev tools).</p>
+<h2 data-number="1.10" id="image-naming"><span
+class="header-section-number">1.10</span> Image Naming</h2>
+<p>All images are pushed to GitHub Container Registry:</p>
+<pre><code>ghcr.io/jkirklan/demo-webapp-ubi:latest
+ghcr.io/jkirklan/demo-db-ubi:latest
+ghcr.io/jkirklan/demo-webapp-rhhi:latest
+ghcr.io/jkirklan/demo-db-rhhi:latest
+ghcr.io/jkirklan/demo-bootc:latest</code></pre>
+<h2 data-number="1.11" id="common-workflows"><span
+class="header-section-number">1.11</span> Common Workflows</h2>
+<h3 data-number="1.11.1" id="development-iteration"><span
+class="header-section-number">1.11.1</span> Development Iteration</h3>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Edit code</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">vim</span> webapp/src/app.js</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Rebuild and test</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> build-ubi</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> deploy-ubi</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> test-ubi</span></code></pre></div>
+<h3 data-number="1.11.2" id="pre-presentation-check"><span
+class="header-section-number">1.11.2</span> Pre-Presentation Check</h3>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Verify everything works</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> all</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Start dashboard for live demo</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> demo</span></code></pre></div>
+<h3 data-number="1.11.3" id="security-audit"><span
+class="header-section-number">1.11.3</span> Security Audit</h3>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Scan all images</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> scan-ubi</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> scan-rhhi</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> scan-bootc</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Review SBOMs</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-lh</span> sboms/</span></code></pre></div>
+<h3 data-number="1.11.4" id="clean-start"><span
+class="header-section-number">1.11.4</span> Clean Start</h3>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove everything</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> clean</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Full rebuild</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> all</span></code></pre></div>
+<h2 data-number="1.12" id="troubleshooting"><span
+class="header-section-number">1.12</span> Troubleshooting</h2>
+<h3 data-number="1.12.1" id="tests-failing"><span
+class="header-section-number">1.12.1</span> Tests Failing</h3>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check container logs</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="ex">podman</span> logs demo-webapp-ubi</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="ex">podman</span> logs demo-db-ubi</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Check containers running</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="ex">podman</span> ps</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Manual health check</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> http://localhost:3001/health</span></code></pre></div>
+<h3 data-number="1.12.2" id="build-failures"><span
+class="header-section-number">1.12.2</span> Build Failures</h3>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check Trivy is installed</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="ex">trivy</span> <span class="at">--version</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Check disk space</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="fu">df</span> <span class="at">-h</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Rebuild with verbose output</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> scripts <span class="kw">&amp;&amp;</span> <span class="ex">./build-demo-ubi.sh</span></span></code></pre></div>
+<h3 data-number="1.12.3" id="port-conflicts"><span
+class="header-section-number">1.12.3</span> Port Conflicts</h3>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check what&#39;s using ports</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="ex">lsof</span> <span class="at">-i</span> :3001</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="ex">lsof</span> <span class="at">-i</span> :3002</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Stop conflicting containers</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="ex">podman</span> stop <span class="va">$(</span><span class="ex">podman</span> ps <span class="at">-q</span><span class="va">)</span></span></code></pre></div>
+<h2 data-number="1.13" id="help"><span
+class="header-section-number">1.13</span> Help</h2>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> help             <span class="co"># Show all available targets</span></span></code></pre></div>
+<h2 data-number="1.14" id="files-generated"><span
+class="header-section-number">1.14</span> Files Generated</h2>
+<pre><code>sboms/                          # Software Bill of Materials
+├── demo-db-ubi-YYYYMMDD.json
+├── demo-webapp-ubi-YYYYMMDD.json
+├── demo-db-rhhi-YYYYMMDD.json
+└── demo-webapp-rhhi-YYYYMMDD.json
+
+$HOME/demo-data/               # Persistent data (macOS)
+├── ubi/postgres/
+└── rhhi/postgres/
+
+/etc/containers/systemd/       # Quadlets (Linux only)
+├── demo-network.network
+├── demo-db-ubi.container
+├── demo-webapp-ubi.container
+├── demo-db-rhhi.container
+└── demo-webapp-rhhi.container</code></pre>
+<h2 data-number="1.15" id="cross-platform-notes"><span
+class="header-section-number">1.15</span> Cross-Platform Notes</h2>
+<p><strong>macOS:</strong> - Uses rootless Podman - Direct
+<code>podman run</code> (no systemd) - Data in
+<code>$HOME/demo-data</code></p>
+<p><strong>Linux/RHEL:</strong> - Uses system Podman with sudo - Systemd
+quadlets for service management - Data in
+<code>/home/&lt;user&gt;/demo-data</code></p>
+<p>Both platforms use the same Makefile - OS detection is automatic!</p>
+</body>
+</html>
