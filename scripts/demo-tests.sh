@@ -4,10 +4,10 @@ set -e
 VARIANT="${1:-ubi}"
 
 if [ "$VARIANT" = "ubi" ]; then
-  PORT=3000
+  PORT=3001
   NAME="UBI"
 elif [ "$VARIANT" = "rhhi" ]; then
-  PORT=3001
+  PORT=3002
   NAME="RHHI"
 else
   echo "❌ Invalid variant: $VARIANT"
